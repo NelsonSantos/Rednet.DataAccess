@@ -1,0 +1,145 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7FCF8DC1-8B80-4BA8-A3B7-03809A14E5A2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Rednet.DataAccess</RootNamespace>
+    <AssemblyName>Rednet.DataAccess</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NET45</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;NET45</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="MySql.Data, Version=6.9.8.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.6.9.8\lib\net45\MySql.Data.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Core.MSIL.1.0.101.0\lib\net45\System.Data.SQLite.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Rednet.DataAccess\CompileResult.cs">
+      <Link>CompileResult.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\Dapper\SqlMapper.cs">
+      <Link>Dapper\SqlMapper.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DatabaseObject.cs">
+      <Link>DatabaseObject.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DatabaseObjectShared.cs">
+      <Link>DatabaseObjectShared.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataFunctions.cs">
+      <Link>DataFunctions.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataFunctionsMySql.cs">
+      <Link>DataFunctionsMySql.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataFunctionsOracle.cs">
+      <Link>DataFunctionsOracle.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataFunctionsSQLite.cs">
+      <Link>DataFunctionsSQLite.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\ErrorOnSaveEventArgs.cs">
+      <Link>ErrorOnSaveEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\ErrorOnValidateEventArgs.cs">
+      <Link>ErrorOnValidateEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\CallSiteCache.cs">
+      <Link>FastMember\CallSiteCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\MemberSet.cs">
+      <Link>FastMember\MemberSet.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\ObjectAccessor.cs">
+      <Link>FastMember\ObjectAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\ObjectReader.cs">
+      <Link>FastMember\ObjectReader.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\TypeAccessor.cs">
+      <Link>FastMember\TypeAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FieldDefAttribute.cs">
+      <Link>FieldDefAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FieldRule.cs">
+      <Link>FieldRule.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\IDatabaseObject.cs">
+      <Link>IDatabaseObject.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\IFieldDefinition.cs">
+      <Link>IFieldDefinition.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\NotifyRecordChangesEventArgs.cs">
+      <Link>NotifyRecordChangesEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\ObjectDefAttribute.cs">
+      <Link>ObjectDefAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\SqlStatements.cs">
+      <Link>SqlStatements.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\TableDefinition.cs">
+      <Link>TableDefinition.cs</Link>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rednet.Shared.NET45\Rednet.Shared.NET45.csproj">
+      <Project>{13bdc78a-b6a8-4ff2-9330-87ebe45e2acd}</Project>
+      <Name>Rednet.Shared.NET45</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

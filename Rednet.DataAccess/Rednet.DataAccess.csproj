@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1D65EC51-B57D-446F-BEC4-FB1F41AECD09}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Rednet.DataAccess</RootNamespace>
+    <AssemblyName>Rednet.DataAccess</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile78</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;PCL</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;PCL</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CompileResult.cs" />
+    <Compile Include="Dapper\SqlMapper.cs" />
+    <Compile Include="DatabaseObject.cs" />
+    <Compile Include="DatabaseObjectImplementation.cs" />
+    <Compile Include="DatabaseObjectShared.cs" />
+    <Compile Include="DataFunctions.cs" />
+    <Compile Include="DataFunctionsMySql.cs" />
+    <Compile Include="DataFunctionsOracle.cs" />
+    <Compile Include="DataFunctionsSQLite.cs" />
+    <Compile Include="ErrorOnSaveEventArgs.cs" />
+    <Compile Include="ErrorOnValidateEventArgs.cs" />
+    <Compile Include="FastMember\CallSiteCache.cs" />
+    <Compile Include="FastMember\MemberSet.cs" />
+    <Compile Include="FastMember\ObjectAccessor.cs" />
+    <Compile Include="FastMember\ObjectReader.cs" />
+    <Compile Include="FastMember\TypeAccessor.cs" />
+    <Compile Include="FieldDefAttribute.cs" />
+    <Compile Include="FieldRule.cs" />
+    <Compile Include="IDatabaseObject.cs" />
+    <Compile Include="IFieldDefinition.cs" />
+    <Compile Include="NotifyRecordChangesEventArgs.cs" />
+    <Compile Include="ObjectDefAttribute.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SqlStatements.cs" />
+    <Compile Include="TableDefinition.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\portable-net45+wp80+win8+wpa81+dnxcore50\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rednet.Shared\Rednet.Shared.csproj">
+      <Project>{d387e593-26f9-4e60-9240-5fb1046b4271}</Project>
+      <Name>Rednet.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
