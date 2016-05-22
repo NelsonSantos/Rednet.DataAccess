@@ -36,7 +36,7 @@ Well, here we define a class User inheriting from `DatabaseObject<>` class with 
 
 Inheriting from `DatabaseObject<>` our class `User` now has some new methods.
 
-Go to add some rows with instance `SaveChanges` method:
+Go to add some rows with the instance `SaveChanges` method :
 ```C#
     var _user1 = new User { Id = 1, Name = 'Nelson', Password = 'xyz', UserType = UserType.Administrator };
     var _user2 = new User { Id = 2, Name = 'Robert', Password = 'xyz', UserType = UserType.Simple };
