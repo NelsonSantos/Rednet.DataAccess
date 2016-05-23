@@ -13,6 +13,18 @@ Ok, go to samples!
 In this framework we have a generic class named `DatabaseObject<>` that encapsulate all the methods to work with data (querys and CRUD) in static and instance manner.
 We will create our classes inheriting from him for that we can manipulate the data.
 
+Before use, we need to set up the database configuration. We need todo this only once, on start routne of our app.
+
+```C#
+var _file = Path.Combine(_dataBasePath, "RednetAccess.db3");
+var _dbFuncName = "MyDataFunctionName";
+var _function = new DataFunctionsSQLite() { DatabaseFile = _file, Name = _dbFuncName };
+
+DatabaseObjectShared.DataFunctions.Clear();
+DatabaseObjectShared.DataFunctions.Add(_dbFuncName, _function);
+DatabaseObjectShared.DefaultDataFunctionName = _dbFuncName;
+```
+
 Defining our **User** class sample:
 
 ```C#
@@ -32,7 +44,7 @@ public class User : DatabaseObject<User>
 }
 ```
 
-Well, here we define a class `User` inheriting from `DatabaseObject<>` class with four fields and setting the Id property with `FieldDefAttribute` and his `IsPrimaryKey` field to `true`.
+Well, here we define a class `User` inheriting from `DatabaseObject<>` class with four fields and setting the Id property with `FieldDefAttribute` and his `IsPrimaryKey` field to `true`. Even that your table does not have a primary key, you must define one of your properties to have one. This is important to have one that will be used to localize registers when this in CRUD operations.
 
 Inheriting from `DatabaseObject<>` our class `User` now has some new methods.
 
