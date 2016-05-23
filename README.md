@@ -32,11 +32,11 @@ public class User : DatabaseObject<User>
 }
 ```
 
-Well, here we define a class User inheriting from `DatabaseObject<>` class with four fields and setting the Id property with `FieldDefAttribute` and his `IsPrimaryKey` field to `true`.
+Well, here we define a class `User` inheriting from `DatabaseObject<>` class with four fields and setting the Id property with `FieldDefAttribute` and his `IsPrimaryKey` field to `true`.
 
 Inheriting from `DatabaseObject<>` our class `User` now has some new methods.
 
-Go to add some rows with the instance `SaveChanges` method :
+Go to add some rows with the instance `SaveChanges()` method :
 ```C#
     var _user1 = new User { Id = 1, Name = 'Nelson', Password = 'xyz', UserType = UserType.Administrator };
     var _user2 = new User { Id = 2, Name = 'Robert', Password = 'xyz', UserType = UserType.Simple };
@@ -49,7 +49,7 @@ Go to add some rows with the instance `SaveChanges` method :
     _user4.SaveChanges();
 ```
 
-Here we will retrieve the data with the static `Load` method:
+Here we will retrieve the data with the static `Load()` method:
 ```C#
 var _user = User.Load(u => u.Id = 1);
 
@@ -58,7 +58,7 @@ Console.WriteLine(_user.Name);
 // output -> 'Nelson'
 ```
 
-Like the `Load` method, the `Query` method can retrieve a list of `User` class.
+Like the `Load()` method, the `Query()` method can retrieve a list of `User` class.
 
 ```C#
 var _users = User.Query(u => u.UserType = UserType.Simple);
