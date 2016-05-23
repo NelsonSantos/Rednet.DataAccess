@@ -10,10 +10,11 @@ With my solution, we will define the classes with some of your properties with a
 
 Ok, go to samples!
 
-In this framework we have a generic class named `DatabaseObject<>` that encapsulate all the methods to work with data (querys and CRUD) in static and instance manner.
-We will create our classes inheriting from him for that we can manipulate the data.
+Before use, we need to set up the database configuration. We need todo this only once, for example, on start routine of our app.
 
-Before use, we need to set up the database configuration. We need todo this only once, on start routne of our app.
+`DatabaseObjectShared` is a class that will contains the parameters to connect on database.
+`DataFunctionsSQLite` is one of the supported databases of the framework.
+Currently supports Oracle, MySQL and SQLite. PostgreSQL and SQLServer soon.
 
 ```C#
 var _file = Path.Combine(_dataBasePath, "RednetAccess.db3");
@@ -24,7 +25,9 @@ DatabaseObjectShared.DataFunctions.Clear();
 DatabaseObjectShared.DataFunctions.Add(_dbFuncName, _function);
 DatabaseObjectShared.DefaultDataFunctionName = _dbFuncName;
 ```
-Currently supports Oracle, MySQL and SQLite. PostgreSQL and SQLServer soon.
+
+In this framework we have a generic class named `DatabaseObject<>` that encapsulate all the methods to work with data (querys and CRUD) in static and instance manner.
+We will create our classes inheriting from him for that we can manipulate the data.
 
 Defining our **User** class sample:
 
@@ -75,6 +78,22 @@ Like the `Load()` method, the `Query()` method can retrieve a list of `User` cla
 
 ```C#
 var _users = User.Query(u => u.UserType = UserType.Simple);
+
+foreach(var _user in _users)
+{
+    Console.WriteLine(_user.Name);
+}
+// output -> 'Robert'
+// output -> 'Willian'
+// output -> 'Thompson'
+```
+
+Both `Load()` and `Query()` methods use same mechanism to retrieve data. The difference is that `Load()` returns null when no data found, and `Query()` returns a empty list.
+
+Rednet.DataAccess use one of first versions of Dapper.Net inside the framework, and we could use that approach on same methods to load data with a custom SQL statement.
+
+```C#
+var _users = User.Query("select * from Users Where UserType = @UserType", new {UserType = UserType.Simple});
 
 foreach(var _user in _users)
 {
