@@ -24,6 +24,7 @@ DatabaseObjectShared.DataFunctions.Clear();
 DatabaseObjectShared.DataFunctions.Add(_dbFuncName, _function);
 DatabaseObjectShared.DefaultDataFunctionName = _dbFuncName;
 ```
+Currently supports Oracle, MySQL and SQLite. PostgreSQL and SQLServer soon.
 
 Defining our **User** class sample:
 
