@@ -148,4 +148,40 @@ Exists()|instance|Check if current data on instanced object exist on correspondi
 Clone()|instance|Clone current object in a new instance object
 CloneTo<TTarget>()|instance|Clone current object in a new instance generic object using its properties names to populate the new object.
 
+**Some code samples:**
 
+Json
+```C#
+    // load data from json string
+    // UserType -> 0 = Simple / 1 = Administrator
+    var _jsonData = "{ Id : 9999, Name : \"Nelson Santos\", Password : \"123\", UserType : 1 }"; 
+    var _user = User.FromJson(_jsonData);
+    _user.SaveChanges();
+
+    _user.ToJson();
+    
+    //--> out put 
+    //{ 
+    //    Id : 9999, 
+    //    Name : "Nelson Santos", 
+    //    Password : "123", 
+    //    UserType : 1 
+    //}
+```
+Notes:
+* `ToJson()` can be used with optional parameter `compressString` (defaults to false) for guiding the method to compress the data before its return.
+* `FromJson()` can be used with optional parameter `decompressString` (defaults to false) for guiding the method to decompress the string before deserialize the data and return the new object.
+
+Checking if data exist (static method)
+```C#
+    var _exists = User.Exists(u => u.Id == 1); // can return true or false
+```
+
+Checking if data exist (instance method)
+```C#
+    var _jsonData = "{ Id : 9999, Name : \"Nelson Santos\", Password : \"123\", UserType : 1 }"; 
+    var _user = User.FromJson(_jsonData);
+    var _exists = _user.Exists(); // can return true or false
+```
+
+Here he use the property decorated with FieldDefAttribute (Id) where IsPrimaryKey field is set to true to identify which columns to use on internal SQL statement.
