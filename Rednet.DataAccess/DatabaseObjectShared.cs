@@ -9,7 +9,7 @@ namespace Rednet.DataAccess
 
         public static DatabaseType CurrentDatabaseType { get; set; }
 
-        public static Dictionary<string, IDataFunctions> DataFunction
+        public static Dictionary<string, IDataFunctions> DataFunctions
         {
             get { return m_DataFunction; }
             set { m_DataFunction = value; }
@@ -21,6 +21,6 @@ namespace Rednet.DataAccess
             set { m_PrimaryKeys = value; }
         }
 
-        public static string DatabaseName { get; set; }
+        public static string DefaultDataFunctionName { get; set; }
     }
 }

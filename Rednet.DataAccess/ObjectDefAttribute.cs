@@ -5,7 +5,7 @@ namespace Rednet.DataAccess
     [AttributeUsage(AttributeTargets.Class)]
     public class ObjectDefAttribute : Attribute
     {
-        private string m_DatabaseName = DatabaseObjectShared.DatabaseName;
+        private string m_DatabaseName = DatabaseObjectShared.DefaultDataFunctionName;
         public string TableName { get; set; }
 
         public string DatabaseName  

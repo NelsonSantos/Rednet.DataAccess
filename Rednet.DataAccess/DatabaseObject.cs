@@ -142,7 +142,7 @@ namespace Rednet.DataAccess
 
         string IDatabaseObject.Name
         {
-            get { return DatabaseObject<T>.Name; }
+            get { return DatabaseObject<T>.ObjectName; }
         }
 
         public static IEnumerable<FieldDefAttribute> GetFields()
@@ -165,7 +165,7 @@ namespace Rednet.DataAccess
         }
 
         [FieldDef(DisplayOnForm = false, DisplayOnGrid = false, IgnoreForSave = true)]
-        public static string Name
+        public static string ObjectName
         {
             get
             {
@@ -498,7 +498,7 @@ namespace Rednet.DataAccess
         {
 #if !PCL
             var _table = TableDefinition.GetTableDefinition(typeof(T));
-            var _sql = "select count(0) as tt from " + Name;
+            var _sql = "select count(0) as tt from " + ObjectName;
             var _sqlCommand = GetCommandSelect(_sql, predicate);
 
             return _table.DefaultDataFunction.Exists(_sqlCommand);
@@ -631,7 +631,7 @@ namespace Rednet.DataAccess
             CompileResult _w = null;
 
             if (_where != null)
-                _w = CompileResult.CompileExpr(_where, _argNames, _argValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, Name);
+                _w = CompileResult.CompileExpr(_where, _argNames, _argValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, ObjectName);
 
             if (_w != null)
             {
@@ -641,17 +641,17 @@ namespace Rednet.DataAccess
                     _cmdText += "\r\nwhere " + _w.CommandText;
             }
 
-            return new DboCommand(Name, _cmdText, _argNames.ToArray(), _argValues.ToArray());
+            return new DboCommand(ObjectName, _cmdText, _argNames.ToArray(), _argValues.ToArray());
         }
 
         private static DboCommand GetCommandSelectReloadMe(string selectionList, object obj)
         {
-            return new DboCommand(Name, selectionList, null, null, obj);
+            return new DboCommand(ObjectName, selectionList, null, null, obj);
         }
 
         private static DboCommand GetCommandDelete(Expression predicate)
         {
-            var _cmdText = "delete from " + Name + " ";
+            var _cmdText = "delete from " + ObjectName + " ";
 
             var _where = predicate;
             var _argNames = new List<string>();
@@ -660,12 +660,12 @@ namespace Rednet.DataAccess
             CompileResult _w = null;
 
             if (_where != null)
-                _w = CompileResult.CompileExpr(_where, _argNames, _argValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, Name);
+                _w = CompileResult.CompileExpr(_where, _argNames, _argValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, ObjectName);
 
             if (_w != null)
                 _cmdText += " where " + _w.CommandText;
 
-            return new DboCommand(Name, _cmdText, _argNames.ToArray(), _argValues.ToArray());
+            return new DboCommand(ObjectName, _cmdText, _argNames.ToArray(), _argValues.ToArray());
         }
 
         #endregion

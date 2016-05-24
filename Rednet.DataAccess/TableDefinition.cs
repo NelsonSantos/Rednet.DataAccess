@@ -67,7 +67,7 @@ namespace Rednet.DataAccess
         private void ResolveDefaultDataFunction()
         {
             var _att = this.ObjectDefAttribute;
-            m_DefaultDataFunctions = DatabaseObjectShared.DataFunction[_att == null ? DatabaseObjectShared.DatabaseName : _att.DatabaseName];
+            m_DefaultDataFunctions = DatabaseObjectShared.DataFunctions[_att == null ? DatabaseObjectShared.DefaultDataFunctionName : _att.DatabaseName];
         }
 
         public ObjectDefAttribute ObjectDefAttribute

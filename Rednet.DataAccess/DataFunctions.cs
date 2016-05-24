@@ -64,6 +64,8 @@ namespace Rednet.DataAccess
         bool Exists(DboCommand command);
 #endif
         CrudReturn ExecuteStatement(string statement);
+        object ExecuteScalar(string sqlStatement);
+        TResult ExecuteScalar<TResult>(string sqlStatement);
     }
 
     public enum CrudStatus
@@ -625,6 +627,46 @@ namespace Rednet.DataAccess
             return _ret;
         }
 
+        public object ExecuteScalar(string sqlStatement)
+        {
+#if !PCL
+            try
+            {
+                using (var _conn = this.Connection)
+                {
+                    var _ret = _conn.ExecuteScalar(sqlStatement);
+                    return _ret;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(string.Format("{0}\r\n{1}", ex.Message, ex.StackTrace), ex);
+            }
+#else
+            return null;
+#endif
+        }
+
+        public TResult ExecuteScalar<TResult>(string sqlStatement)
+        {
+#if !PCL
+            try
+            {
+                using (var _conn = this.Connection)
+                {
+                    var _ret = _conn.ExecuteScalar<TResult>(sqlStatement);
+                    return _ret;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(string.Format("{0}\r\n{1}", ex.Message, ex.StackTrace), ex);
+            }
+#else
+            return default(TResult);
+#endif
+        }
+
         public abstract string GetConnectionString();
         public abstract string GetSqlLastIdentity();
         public abstract string GetDateTimeFormat();
@@ -691,7 +733,7 @@ namespace Rednet.DataAccess
         public static void SaveDdlScript<TDatabaseObject>(string path) where TDatabaseObject : IDatabaseObject
         {
             var _ddl = TableDefinition.GetTableDefinition(typeof(TDatabaseObject)).GetScriptCreateTable();
-            var _file = Path.Combine(path, DatabaseObject<TDatabaseObject>.Name + ".sql");
+            var _file = Path.Combine(path, DatabaseObject<TDatabaseObject>.ObjectName + ".sql");
 #if !PCL
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
@@ -707,7 +749,7 @@ namespace Rednet.DataAccess
         {
 #if !PCL
 
-            var _file = Path.Combine(path, DatabaseObject<TDatabaseObject>.Name + ".sql");
+            var _file = Path.Combine(path, DatabaseObject<TDatabaseObject>.ObjectName + ".sql");
 
             if (!File.Exists(_file))
             {
@@ -762,7 +804,7 @@ namespace Rednet.DataAccess
         public static List<TDatabaseObject> BackupData<TDatabaseObject>()
         {
 #if !PCL
-            var _name = DatabaseObject<TDatabaseObject>.Name;
+            var _name = DatabaseObject<TDatabaseObject>.ObjectName;
             try
             {
                 var _sql = string.Format("select * from {0}", _name);
@@ -773,7 +815,7 @@ namespace Rednet.DataAccess
                 if (ex.Message.ToLower().Contains("no such table"))
                     return new List<TDatabaseObject>();
 
-                throw new Exception(string.Format("Ocorreu um erro ao fazer o backup da tabela [{0}].\r\n\r\nErro: {1}\r\n\r\nEm: {2}", DatabaseObject<TDatabaseObject>.Name, ex.Message, ex.StackTrace), ex);
+                throw new Exception(string.Format("Ocorreu um erro ao fazer o backup da tabela [{0}].\r\n\r\nErro: {1}\r\n\r\nEm: {2}", DatabaseObject<TDatabaseObject>.ObjectName, ex.Message, ex.StackTrace), ex);
             }
 #else
             return new List<TDatabaseObject>();

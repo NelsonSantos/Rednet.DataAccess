@@ -107,6 +107,9 @@
     <Compile Include="..\Rednet.DataAccess\ObjectDefAttribute.cs">
       <Link>ObjectDefAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\Rednet.DataAccess\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="..\Rednet.DataAccess\SqlStatements.cs">
       <Link>SqlStatements.cs</Link>
     </Compile>
@@ -114,7 +117,6 @@
       <Link>TableDefinition.cs</Link>
     </Compile>
     <Compile Include="Resources\Resource.Designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

@@ -92,13 +92,15 @@
     <Compile Include="..\Rednet.DataAccess\ObjectDefAttribute.cs">
       <Link>ObjectDefAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\Rednet.DataAccess\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="..\Rednet.DataAccess\SqlStatements.cs">
       <Link>SqlStatements.cs</Link>
     </Compile>
     <Compile Include="..\Rednet.DataAccess\TableDefinition.cs">
       <Link>TableDefinition.cs</Link>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rednet.Shared.iOS\Rednet.Shared.iOS.csproj">
