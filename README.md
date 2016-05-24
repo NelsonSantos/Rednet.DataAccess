@@ -135,6 +135,13 @@ foreach(var _user in _users)
 
 Below a list of useful functions to use with it:
 
-
+Function Name|Type|Description
+-------------|----|-----------
+FromJson()|static|Transforms a json data in the corresponding object
+ToJson()|instance|Export the object into json data format
+Exists()|static|Check if indicated predicate on static object exist in the corresponding database table
+Exists()|instance|Check if current data on instanced object exist on corresponding database table
+Clone()|instance|Clone current object in a new instance object
+CloneTo<TTarget>()|instance|Clone current object in a new instance generic object using its properties names to populate the new object.
 
 
