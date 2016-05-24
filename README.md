@@ -1,9 +1,13 @@
 # Rednet.DataAccess
 
-Rednet.DataAccess is one more another component to work with data that simplifies your use.
-
 ### Setup
 * Available on NuGet: https://www.nuget.org/packages/Rednet.DataAccess [![NuGet](https://img.shields.io/nuget/v/Rednet.DataAccess.svg?label=NuGet)](https://www.nuget.org/packages/Rednet.DataAccess/)
+
+Folow me on twitter:
+**@nelson_santos**
+**@rednetsoftware**
+
+Rednet.DataAccess is one more another component to work with data that simplifies your use.
 
 In my long journey to work with data, I have used much data access libraries to simplify the development, but in some moment, this libraries always presents a problem which is difficult to solve, and in most cases I always have to code SQL queries for data retrieving and performance.
 
