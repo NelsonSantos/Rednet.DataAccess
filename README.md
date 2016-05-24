@@ -131,5 +131,10 @@ foreach(var _user in _users)
 
 ```
 
+**Useful functions**
+
+Below a list of useful functions to use with it:
+
+
 
 
