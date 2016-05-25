@@ -115,6 +115,48 @@ foreach(var _user in _users)
 // output -> 'Thompson'
 ```
 
+### Populating inner objects
+
+With Rednet.Access we can populate inner objects that are present on our classes.  For that we need to use `JoinFieldAttribute` on the properties indicating to the framework that in the moment of generate the SQL statement that he will include a **inner**, **left** or **right** join command and populate the inner properties with the results. See the code:
+
+```C#
+    public class Order : DatabaseObject<Order>
+    {
+        [FieldDef(AutomaticValue = AutomaticValue.AutoIncrement, IsPrimaryKey = true)]
+        public int OrderId { get; set; }
+
+        [FieldDef(IgnoreForSave = true)]
+        public double TotalOrder { get; }
+
+        [JoinField(SourceColumnNames = new [] { "OrderId" }, TargetColumnNames = new [] {"OrderId"}, JoinRelation = JoinRelation.OneToMany, JoinType = JoinType.LeftJoin)]
+        public ObservableCollection<OrderItem> OrderItems { get; set; } 
+    }
+    
+    public class OrderItem : DatabaseObject<OrderItem>
+    {
+        [FieldDef(IsPrimaryKey = true)]
+        public int OrderId { get; set; }
+
+        [FieldDef(IsPrimaryKey = true)]
+        public int ItemId { get; set; }
+
+        public int Amount { get; set; }
+
+        public double Price { get; set; }
+
+        [FieldDef(IgnoreForSave = true)]
+        public double TotalItem
+        {
+            get
+            {
+                return this.Amount * this.Price;
+            }
+        }
+    }    
+```
+
+
+
 **Below some samples codes for delete of data:**
 
 ```C#
