@@ -3,7 +3,7 @@
 ### Setup
 * Available on NuGet: https://www.nuget.org/packages/Rednet.DataAccess [![NuGet](https://img.shields.io/nuget/v/Rednet.DataAccess.svg?label=NuGet)](https://www.nuget.org/packages/Rednet.DataAccess/)
 
-## Follow me on twitter:
+## For updates, follow me on twitter:
 * [@nelson_santos](https://twitter.com/rednetsoftware)
 * [@rednetsoftware](https://twitter.com/nelson_santos)
 
@@ -185,3 +185,13 @@ Checking if data exist (instance method)
 ```
 
 Here he use the property decorated with FieldDefAttribute (Id) where IsPrimaryKey field is set to true to identify which columns to use on internal SQL statement.
+
+**The FieldDefAttribute**
+
+The `FieldDefAttribute` can change the comportment of your class. He is a very important part of framework and indicates how some properties inside your class will be treated by the engine of Rednet.DataAccess. Below are some of main fields descriptions for `FieldDefAttribute`:
+
+Property Name|Data type|Description
+-------------|---------|-----------
+AutomaticValue|Enum|This has three values<br>**None** = Default - Does nothing.<br>**AutoIncrement** = Indicate that properties with this type are backend calculate and will not be included in Insert fields statements. On **SQLite** database you can use it to generate auto increment columns.<br>**BackEndCalculated** = Properties with this type are treated like AutoIncrement value, but does not auto generate a value. Like object **Sequences** on **Oracle**, you need to make some work to put the new value on your column (like a trigger) and the Rednet.DataAccess will get it back to your object.
+IsPrimaryKey|Boolean|Indicate that the property is part of a Primary Key Constraint. This can be applied on more than one property inside your class. In all classes that inherit from `DatabaseObject<>` must have at least one property decorated with `FieldDefAttribute` and setted with IsPrimaryKey = true to function properly.
+IgnoreForSave|Boolean|Properties marked with this will be ignored from DML Statements inside the framework. Its useful when you need to create some properties that return some data that is generated in run time and are not present in your table.
