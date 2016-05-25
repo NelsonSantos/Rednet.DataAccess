@@ -1,9 +1,11 @@
-# Rednet.DataAccess
+![][logo] 
+# Rednet.DataAccess 
+[logo]:http://www.rednetsoftware.com.br/avatar_rednet_nuget_small.png
 
 ### Setup
 * Available on NuGet: https://www.nuget.org/packages/Rednet.DataAccess [![NuGet](https://img.shields.io/nuget/v/Rednet.DataAccess.svg?label=NuGet)](https://www.nuget.org/packages/Rednet.DataAccess/)
 
-## For updates, follow me on twitter:
+## For updates news, here or follow me on twitter:
 * [@nelson_santos](https://twitter.com/rednetsoftware)
 * [@rednetsoftware](https://twitter.com/nelson_santos)
 
