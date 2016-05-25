@@ -73,7 +73,7 @@ namespace Rednet.DataAccess
 
         public string Label { get; set; }
         public string ShortLabel { get; set; }
-        public Type DotNetType { get; set; }
+        internal Type DotNetType { get; set; }
         public int Lenght { get; set; }
         public int Precision { get; set; }
         public string GetParameterName(IDataFunctions datafunction)
@@ -94,15 +94,15 @@ namespace Rednet.DataAccess
         public string[] TargetColumnNames { get; set; }
         public JoinType JoinType { get; set; }
         public JoinRelation JoinRelation { get; set; }
-        public Type FieldType { get; internal set; }
+        internal Type FieldType { get; /*internal*/ set; }
         //public string SplitOnField { get; internal set; }
-        public string PrefixTable { get; internal set; }
-        public string TableName { get; internal set; }
-        public string TableNameAlias { get; internal set; }
-        public string SourceTableName { get; internal set; }
-        public string SourceTableNameAlias { get; internal set; }
-        public string[] PrimaryKeysFields { get; internal set; }
-        public string[] FieldNames { get; internal set; }
+        //public string PrefixTable { get; internal set; }
+        internal string TableName { get; /*internal*/ set; }
+        //public string TableNameAlias { get; internal set; }
+        internal string SourceTableName { get; /*internal*/ set; }
+        internal string SourceTableNameAlias { get; /*internal*/ set; }
+        internal string[] PrimaryKeysFields { get; /*internal*/ set; }
+        internal string[] FieldNames { get; /*internal*/ set; }
     }
 
     public enum JoinType

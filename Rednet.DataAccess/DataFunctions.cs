@@ -63,9 +63,9 @@ namespace Rednet.DataAccess
         bool Exists(string sql, object obj);
         bool Exists(DboCommand command);
 #endif
-        CrudReturn ExecuteStatement(string statement);
-        object ExecuteScalar(string sqlStatement);
-        TResult ExecuteScalar<TResult>(string sqlStatement);
+        CrudReturn ExecuteStatement(string statement, object parameter = null);
+        object ExecuteScalar(string sqlStatement, object parameter = null);
+        TResult ExecuteScalar<TResult>(string sqlStatement, object parameter = null);
     }
 
     public enum CrudStatus
@@ -602,7 +602,7 @@ namespace Rednet.DataAccess
         public abstract IDbConnection Connection { get; }
 #endif
 
-        public CrudReturn ExecuteStatement(string sqlStatement)
+        public CrudReturn ExecuteStatement(string sqlStatement, object parameter = null)
         {
             var _ret = new CrudReturn
             {
@@ -615,7 +615,7 @@ namespace Rednet.DataAccess
             {
                 using (var _conn = this.Connection)
                 {
-                    _ret.RecordsAffected = _conn.Execute(sqlStatement);
+                    _ret.RecordsAffected = _conn.Execute(sqlStatement, parameter);
                 }
             }
             catch (Exception ex)
@@ -627,14 +627,14 @@ namespace Rednet.DataAccess
             return _ret;
         }
 
-        public object ExecuteScalar(string sqlStatement)
+        public object ExecuteScalar(string sqlStatement, object parameter = null)
         {
 #if !PCL
             try
             {
                 using (var _conn = this.Connection)
                 {
-                    var _ret = _conn.ExecuteScalar(sqlStatement);
+                    var _ret = _conn.ExecuteScalar(sqlStatement, parameter);
                     return _ret;
                 }
             }
@@ -647,14 +647,14 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        public TResult ExecuteScalar<TResult>(string sqlStatement)
+        public TResult ExecuteScalar<TResult>(string sqlStatement, object parameter = null)
         {
 #if !PCL
             try
             {
                 using (var _conn = this.Connection)
                 {
-                    var _ret = _conn.ExecuteScalar<TResult>(sqlStatement);
+                    var _ret = _conn.ExecuteScalar<TResult>(sqlStatement, parameter);
                     return _ret;
                 }
             }

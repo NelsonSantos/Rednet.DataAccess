@@ -119,6 +119,9 @@
     <Compile Include="..\Rednet.DataAccess\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\Rednet.DataAccess\SerializableContractResolver.cs">
+      <Link>SerializableContractResolver.cs</Link>
+    </Compile>
     <Compile Include="..\Rednet.DataAccess\SqlStatements.cs">
       <Link>SqlStatements.cs</Link>
     </Compile>

@@ -347,17 +347,17 @@ public static class Extensions
 
     public static List<T> Clone<T>(this List<T> list)
     {
-        return JsonConvert.DeserializeObject<List<T>>(ToJson(list), new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+        return JsonConvert.DeserializeObject<List<T>>(ToJson(list), new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
     }
 
     public static List<TDest> Convert<TSource, TDest>(this List<TSource> list)
     {
-        return JsonConvert.DeserializeObject<List<TDest>>(ToJson(list), new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+        return JsonConvert.DeserializeObject<List<TDest>>(ToJson(list), new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
     }
 
     public static string ToJson<T>(T data)
     {
-        var _ret = JsonConvert.SerializeObject(data, new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+        var _ret = JsonConvert.SerializeObject(data, new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
         return _ret;
     }
 

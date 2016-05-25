@@ -20,6 +20,8 @@ namespace TestApp
         public UserListModel()
         {
             this.UserList = new ObservableCollection<User>();
+
+            // here, when we dont put any parameters on User.Query() method, all the rows are returned
             foreach (var _user in User.Query())
             {
                 this.UserList.Add(_user);
