@@ -120,22 +120,27 @@ foreach(var _user in _users)
 With Rednet.Access we can populate inner objects that are present on our classes.  For that we need to use `JoinFieldAttribute` on the properties indicating to the framework that in the moment of generate the SQL statement that he will include a **inner**, **left** or **right** join command and populate the inner properties with the results. See the code:
 
 ```C#
-    public class Order : DatabaseObject<Order>
+    public class Purchase : DatabaseObject<Purchase>
     {
         [FieldDef(AutomaticValue = AutomaticValue.AutoIncrement, IsPrimaryKey = true)]
-        public int OrderId { get; set; }
+        public int PurchaseId { get; set; }
+
+        public DateTime PurchaseDate { get; set; }
 
         [FieldDef(IgnoreForSave = true)]
-        public double TotalOrder { get; }
+        public double TotalPurchase
+        {
+            get { return this.OrderItems.Sum(i => i.TotalItem); }
+        }
 
         [JoinField(SourceColumnNames = new [] { "OrderId" }, TargetColumnNames = new [] {"OrderId"}, JoinRelation = JoinRelation.OneToMany, JoinType = JoinType.LeftJoin)]
-        public ObservableCollection<OrderItem> OrderItems { get; set; } 
+        public ObservableCollection<PurchaseItem> OrderItems { get; set; } 
     }
     
-    public class OrderItem : DatabaseObject<OrderItem>
+    public class PurchaseItem : DatabaseObject<PurchaseItem>
     {
         [FieldDef(IsPrimaryKey = true)]
-        public int OrderId { get; set; }
+        public int PurchaseId { get; set; }
 
         [FieldDef(IsPrimaryKey = true)]
         public int ItemId { get; set; }
@@ -152,13 +157,53 @@ With Rednet.Access we can populate inner objects that are present on our classes
                 return this.Amount * this.Price;
             }
         }
-    }    
+    }   
 ```
 
+**Put some data to test:**
+```C#
+    for (var _id = 1; _id < 3; _id++)
+    {
+        var _order = new Purchase { PurchaseId = _id, PurchaseDate = DateTime.Parse("2016-05-25") };
+        _order.SaveChanges(); 
+    
+        var _amount = 1;
+        for (int _item = 1; _item < (_id == 1 ? 4 : 3); _item++)
+        {
+            var _orderitem = new PurchaseItem { PurchaseId = _id, ItemId = _item, Amount = _amount, Price = 1.0 };
+            _orderitem.SaveChanges();
+            _amount++;
+        }
+    }
+```
 
+**One line of code, all your records...**
+```C#
+    var _orders = Purchase.Query(); // get all rows on table
+```
+
+**and, displaying then!**
+```C#
+    foreach (var _order in _orders)
+    {
+        Console.WriteLine(string.Format("Purchase: {0} - PurchaseDate: {1} - Total: {2}", _order.PurchaseId, _order.PurchaseDate, _order.TotalPurchase));
+        foreach (var _item in _order.OrderItems)
+        {
+            Console.WriteLine("Item: {0} - Amount: {1} - Price: {2} - Total: {3}", _item.ItemId, _item.Amount, _item.Price, _item.TotalItem);
+        }
+    }
+    
+    //-> output
+    //Purchase: 1 - PurchaseDate: 5/25/2016 12:00:00 AM - Total: 6
+    //Item: 1 - Amount: 1 - Price: 1 - Total: 1
+    //Item: 2 - Amount: 2 - Price: 1 - Total: 2
+    //Item: 3 - Amount: 3 - Price: 1 - Total: 3
+    //Purchase: 2 - PurchaseDate: 5/25/2016 12:00:00 AM - Total: 3
+    //Item: 1 - Amount: 1 - Price: 1 - Total: 1
+    //Item: 2 - Amount: 2 - Price: 1 - Total: 2    
+```
 
 **Below some samples codes for delete of data:**
-
 ```C#
 
     // list all rows and get last User row
