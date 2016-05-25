@@ -5,21 +5,21 @@
 ### Setup
 * Available on NuGet: https://www.nuget.org/packages/Rednet.DataAccess [![NuGet](https://img.shields.io/nuget/v/Rednet.DataAccess.svg?label=NuGet)](https://www.nuget.org/packages/Rednet.DataAccess/)
 
-## For updates news, here or follow me on twitter:
+## For update news, follow me on twitter:
 * [@nelson_santos](https://twitter.com/rednetsoftware)
 * [@rednetsoftware](https://twitter.com/nelson_santos)
 
 **Rednet.DataAccess is one more another component to work with data that simplifies your use.**
 
-In my long journey to work with data, I have used much data access libraries to simplify the development, but in some moment, this libraries always presents a problem which is difficult to solve, and in most cases I always have to code SQL queries for data retrieving and performance.
+In my long journey to work with data, I have used lot of data access libraries to simplify the development, but in some moment, this libraries always presents a problem which is difficult to solve, and in most cases I always have to code SQL queries for data retrieving and performance.
 
 The process of coding SQL queries always force me to remember of column and tables names that is all the time changing in our projects.
 
-With my solution, we will define the classes with some of your properties with attributes that indicate our preferences on the tables and columns, and execute CRUD operations and data queries with a strong typing approach, and in the background it will generate the appropriate connection and SQL statement for us.
+With Rednet.DataAccess, we will define the classes with some of your properties with attributes that indicate our preferences on the tables and columns, and execute CRUD operations and data queries with a strong typing approach, and in the background it will generate the appropriate connections and SQL statements for us.
 
 **Ok, go to samples!**
 
-Before use, we need to set up the database configuration. We need todo this only once, for example, on start routine of our app.
+Before use, we need to set up the database configuration. We need todo this only once, for example, on startup routine of our app.
 
 `DatabaseObjectShared` is a class that will contains the parameters to connect on database.
 `DataFunctionsSQLite` is one of the supported databases of the framework.
@@ -57,7 +57,7 @@ public class User : DatabaseObject<User>
 }
 ```
 
-Well, here we define a class `User` inheriting from `DatabaseObject<>` class with four fields and setting the Id property with `FieldDefAttribute` and his `IsPrimaryKey` field to `true`. Even that your table does not have a primary key, you must define one of your properties to have one. This is important to have one that will be used to localize registers when this in CRUD operations.
+Well, here we define a class `User` inheriting from `DatabaseObject<>` class with four fields and setting the Id property with `FieldDefAttribute` and his `IsPrimaryKey` field to `true`. Even that your table does not have a primary key, you must define one of your properties to have one. This is important to have one that will be used to localize the records when this in CRUD operations.
 
 Inheriting from `DatabaseObject<>` our class `User` now has some new methods.
 
@@ -74,7 +74,7 @@ Inheriting from `DatabaseObject<>` our class `User` now has some new methods.
     _user4.SaveChanges();
 ```
 
-The `SaveChanges()` method do a check on register checking if it already exists on database table. If exists, do a update on it, otherwise is inserted.
+The `SaveChanges()` method do a check on the record checking if it already exists on database table. If exists, do a update on it, otherwise is inserted.
 
 **Here we will retrieve the data with the static `Load()` method:**
 ```C#
@@ -115,9 +115,19 @@ foreach(var _user in _users)
 // output -> 'Thompson'
 ```
 
+**The FieldDefAttribute**
+
+The `FieldDefAttribute` can change the behavior of your class. He is a very important part of framework and indicates how some properties inside your class will be treated by the engine of Rednet.DataAccess. Below are some of main fields descriptions for `FieldDefAttribute`:
+
+Property Name|Data type|Description
+-------------|---------|-----------
+AutomaticValue|Enum|This has three values<br>**None** = Default - Does nothing.<br>**AutoIncrement** = Indicate that properties with this type are backend calculate and will not be included in Insert fields statements. On **SQLite** database you can use it to generate auto increment columns.<br>**BackEndCalculated** = Properties with this type are treated like AutoIncrement value, but does not auto generate a value. Like object **Sequences** on **Oracle**, you need to make some work to put the new value on your column (like a trigger) and the Rednet.DataAccess will get it back to your object.
+IsPrimaryKey|Boolean|Indicate that the property is part of a Primary Key Constraint. This can be applied on more than one property inside your class. In all classes that inherit from `DatabaseObject<>` must have at least one property decorated with `FieldDefAttribute` and setted with IsPrimaryKey = true to function properly.
+IgnoreForSave|Boolean|Properties marked with this will be ignored from DML Statements inside the framework. Its useful when you need to create some properties that return some data that is generated in run time and are not present in your table.
+
 ### Populating inner objects
 
-With Rednet.Access we can populate inner objects that are present on our classes.  For that we need to use `JoinFieldAttribute` on the properties indicating to the framework that in the moment of generate the SQL statement that he will include a **inner**, **left** or **right** join command and populate the inner properties with the results. See the code:
+With Rednet.DataAccess we can populate inner objects that are present on our classes.  For that we need to use `JoinFieldAttribute` on the properties indicating to the framework that in the moment of generate the SQL statement that he will include a **inner**, **left** or **right** join command and populate the inner properties with the results. See the code:
 
 ```C#
     public class Purchase : DatabaseObject<Purchase>
@@ -203,6 +213,15 @@ With Rednet.Access we can populate inner objects that are present on our classes
     //Item: 2 - Amount: 2 - Price: 1 - Total: 2    
 ```
 
+**The `JoinFieldAttribute` main properties:**
+
+Property Name|Type|Description
+-------------|----|-----------
+SourceColumnNames|String[]|A array with the source column names on current table/class object that will be connected with the foreign table/class.
+TargetColumnNames|String[]|A array with the target column names of the foreign table/class object that will be connected with the source table/class. This list of column names must be the same of the type of decorated with `JoinFieldAttribute` property.
+JoinRelation|Enum|Informs to framework how this data will be populate on property.<br>**OneToOne** = Informs that only one row of that type will be populated on the property.<br>**OneToMany** = Informs that zero or more than one row will be populated on the property. Usually this is used on properties of types IList<>, IObservables<>, IEnumerables<>, etc.
+JoinType|Enum|Informs to the framework how the SQL statement will be constructed with relation to **Join** command.<br>**InnerJoin** = Selects all rows from both tables as long as there is a match between the columns in both tables.<br>**LeftJoin** = Selects all rows from the left table (main object class), with the matching rows in the right table (property on main object class). The result is NULL in the right side when there is no match.<br>**RightJoin** = Selects all rows from the right table (property on main object class), with the matching rows in the left table (main object class). The result is NULL in the left side when there is no match.
+
 **Below some samples codes for delete of data:**
 ```C#
 
@@ -274,13 +293,3 @@ Checking if data exist (instance method)
 ```
 
 Here he use the property decorated with FieldDefAttribute (Id) where IsPrimaryKey field is set to true to identify which columns to use on internal SQL statement.
-
-**The FieldDefAttribute**
-
-The `FieldDefAttribute` can change the comportment of your class. He is a very important part of framework and indicates how some properties inside your class will be treated by the engine of Rednet.DataAccess. Below are some of main fields descriptions for `FieldDefAttribute`:
-
-Property Name|Data type|Description
--------------|---------|-----------
-AutomaticValue|Enum|This has three values<br>**None** = Default - Does nothing.<br>**AutoIncrement** = Indicate that properties with this type are backend calculate and will not be included in Insert fields statements. On **SQLite** database you can use it to generate auto increment columns.<br>**BackEndCalculated** = Properties with this type are treated like AutoIncrement value, but does not auto generate a value. Like object **Sequences** on **Oracle**, you need to make some work to put the new value on your column (like a trigger) and the Rednet.DataAccess will get it back to your object.
-IsPrimaryKey|Boolean|Indicate that the property is part of a Primary Key Constraint. This can be applied on more than one property inside your class. In all classes that inherit from `DatabaseObject<>` must have at least one property decorated with `FieldDefAttribute` and setted with IsPrimaryKey = true to function properly.
-IgnoreForSave|Boolean|Properties marked with this will be ignored from DML Statements inside the framework. Its useful when you need to create some properties that return some data that is generated in run time and are not present in your table.
