@@ -9,7 +9,7 @@
 * [@nelson_santos](https://twitter.com/rednetsoftware)
 * [@rednetsoftware](https://twitter.com/nelson_santos)
 
-**Rednet.DataAccess is one more another component to work with data that simplifies your use.**
+**Rednet.DataAccess yet another component to work with data that simplifies your use.**
 
 In my long journey to work with data, I have used lot of data access libraries to simplify the development, but in some moment, this libraries always presents a problem which is difficult to solve, and in most cases I always have to code SQL queries for data retrieving and performance.
 
