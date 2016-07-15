@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
 using System;
+using System.Collections.Generic;
 using Microsoft.CSharp.RuntimeBinder;
 
 namespace Rednet.DataAccess.FastMember
@@ -8,7 +9,9 @@ namespace Rednet.DataAccess.FastMember
 #if !PCL
     internal static class CallSiteCache
     {
-        private static readonly Hashtable getters = new Hashtable(), setters = new Hashtable();
+        //private static readonly Hashtable getters = new Hashtable(), setters = new Hashtable();
+        private static readonly Dictionary<string, object> getters = new Dictionary<string, object>();
+        private static readonly Dictionary<string, object> setters = new Dictionary<string, object>();
 
         internal static object GetValue(string name, object target)
         {

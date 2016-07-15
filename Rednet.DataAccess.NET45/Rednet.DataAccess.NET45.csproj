@@ -41,6 +41,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Data.SQLite.Core.MSIL.1.0.101.0\lib\net45\System.Data.SQLite.dll</HintPath>
       <Private>True</Private>
@@ -76,6 +77,9 @@
     </Compile>
     <Compile Include="..\Rednet.DataAccess\DataFunctionsSQLite.cs">
       <Link>DataFunctionsSQLite.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataFunctionsSqlServer.cs">
+      <Link>DataFunctionsSqlServer.cs</Link>
     </Compile>
     <Compile Include="..\Rednet.DataAccess\ErrorOnSaveEventArgs.cs">
       <Link>ErrorOnSaveEventArgs.cs</Link>

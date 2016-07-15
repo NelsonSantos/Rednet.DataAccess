@@ -34,6 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ByteArrayConverter.cs" />
     <Compile Include="EnumDescription.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="GPS\Bounds.cs" />
@@ -49,8 +50,18 @@
     <Compile Include="GPS\Location.cs" />
     <Compile Include="GPS\Step.cs" />
     <Compile Include="ImageResizer.cs" />
+    <Compile Include="MD5.cs" />
+    <Compile Include="MD5CryptoServiceProvider.cs" />
     <Compile Include="NumberConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnicodeNormalization\CompIterator.cs" />
+    <Compile Include="UnicodeNormalization\DecompIterator.cs" />
+    <Compile Include="UnicodeNormalization\Helpers\AggregateRight.cs" />
+    <Compile Include="UnicodeNormalization\Helpers\Deque.cs" />
+    <Compile Include="UnicodeNormalization\RecursDecompIterator.cs" />
+    <Compile Include="UnicodeNormalization\UChar.cs" />
+    <Compile Include="UnicodeNormalization\UCharIterator.cs" />
+    <Compile Include="UnicodeNormalization\UNorm.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">

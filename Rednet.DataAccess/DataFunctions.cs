@@ -4,16 +4,21 @@ using System.Collections.Generic;
 #if !PCL
 using System.Data;
 using System.Data.Common;
-using System.Security.Cryptography.X509Certificates;
+//using System.Security.Cryptography.X509Certificates;
 using Rednet.DataAccess.Dapper;
 #endif
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+#if WINDOWS_PHONE_APP
+using PCLStorage;
+#endif
 //using PCLStorage;
 using Rednet.DataAccess.FastMember;
 
@@ -75,7 +80,7 @@ namespace Rednet.DataAccess
         Fail
     }
 
-#if!PCL
+#if!PCL && !WINDOWS_PHONE_APP
     [Serializable]
 #endif
     public class CrudReturn
@@ -473,9 +478,13 @@ namespace Rednet.DataAccess
             object _ret = null;
             var _type = typeof (TDatabaseObject);
 
+#if WINDOWS_PHONE_APP
+            if (_type.GetTypeInfo().IsPrimitive || _type.GetTypeInfo().ImplementedInterfaces.Any(i => i.Name == "IDatabaseObject"))
+                return default(TDatabaseObject);
+#else
             if (_type.IsPrimitive || _type.GetInterface("IDatabaseObject") == null)
                 return default(TDatabaseObject);
-
+#endif
             var _name = _type.Name;
 
             if (!DatabaseObjectShared.PrimaryKeys.ContainsKey(_name))
@@ -513,14 +522,26 @@ namespace Rednet.DataAccess
 
                 if (_fields.Contains(_member.Name))
                 {
+#if WINDOWS_PHONE_APP
+                    var _t = _member.Type.GetTypeInfo().IsGenericType ? _member.Type.GenericTypeArguments[0] : _member.Type;
+#else
                     var _t = _member.Type.IsGenericType ? _member.Type.GenericTypeArguments[0] : _member.Type;
+#endif
                     try
                     {
                         // este metodo era utilizado quando esta function estava em DatabaseObject
                         //var _v = typeof(DataFunctions<T>).MakeGenericType(_t).GetMethod("PopulateData").Invoke(null, new object[] { row, _list, _kchk, _sqlName });
+#if WINDOWS_PHONE_APP
+                        var _v = typeof(DataFunctions<T>).GetTypeInfo().GetDeclaredMethod("PopulateData").MakeGenericMethod(_t).Invoke(null, new object[] { row, _list, _kchk, _sqlName });
+#else
                         var _v = typeof(DataFunctions<T>).GetMethod("PopulateData").MakeGenericMethod(_t).Invoke(null, new object[] { row, _list, _kchk, _sqlName });
+#endif
                         if (_v == null) continue;
+#if WINDOWS_PHONE_APP
+                        if (_member.Type.GetTypeInfo().IsGenericType)
+#else
                         if (_member.Type.IsGenericType)
+#endif
                         {
                             _acessor[_object, _member.Name] = _acessor[_object, _member.Name] ?? TypeAccessor.Create(_member.Type).CreateNew();
 
@@ -560,7 +581,11 @@ namespace Rednet.DataAccess
                             _acessor[_object, _member.Name] = Convert.ChangeType(_value, Nullable.GetUnderlyingType(_member.Type));
                         else
                         {
+#if WINDOWS_PHONE_APP
+                            if (_member.Type.GetTypeInfo().IsEnum)
+#else
                             if (_member.Type.IsEnum)
+#endif
                                 _acessor[_object, _member.Name] = Convert.ChangeType(_value, typeof(int));
                             else
                                 _acessor[_object, _member.Name] = Convert.ChangeType(_value, _member.Type);
@@ -582,7 +607,7 @@ namespace Rednet.DataAccess
 #else
             return default(TDatabaseObject);
 #endif
-        }
+                        }
 
         private static IEnumerable<FieldDefAttribute> GetPrimaryKeyFields<TDatabaseObject>()// where TDatabaseObject : IDatabaseObject
         {
@@ -735,37 +760,71 @@ namespace Rednet.DataAccess
             var _ddl = TableDefinition.GetTableDefinition(typeof(TDatabaseObject)).GetScriptCreateTable();
             var _file = Path.Combine(path, DatabaseObject<TDatabaseObject>.ObjectName + ".sql");
 #if !PCL
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
+#if WINDOWS_PHONE_APP
+            var _task = Task.Run(async () =>
+            {
+                var _folder = await PCLStorage.FileSystem.Current.GetFolderFromPathAsync(path);
 
-            if (File.Exists(_file))
-                File.Delete(_file);
+                if (_folder == null)
+                    await PCLStorage.FileSystem.Current.LocalStorage.CreateFolderAsync(path, CreationCollisionOption.FailIfExists);
+
+                var _check = await PCLStorage.FileSystem.Current.GetFileFromPathAsync(_file);
+                if (_check != null)
+                    await _check.DeleteAsync();
+
+
+                var _newfile = await PCLStorage.FileSystem.Current.LocalStorage.CreateFileAsync(_file, CreationCollisionOption.ReplaceExisting);
+
+                await _newfile.WriteAllTextAsync(_ddl);
+
+            });
+            _task.Start();
+#else
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            if (File.Exists(_file)) File.Delete(_file);
 
             File.WriteAllText(_file, _ddl);
+#endif
 #endif
         }
 
         public static bool CheckDdlScript<TDatabaseObject>(string path) where TDatabaseObject : IDatabaseObject
         {
 #if !PCL
-
             var _file = Path.Combine(path, DatabaseObject<TDatabaseObject>.ObjectName + ".sql");
+            var _oldDdl = "";
 
-            if (!File.Exists(_file))
-            {
+#if WINDOWS_PHONE_APP
+            _oldDdl = GetScriptAsync(_file).Result;
+            if (_oldDdl == "")
                 return false;
-            }
-            else
-            {
-                var _oldDdl = File.ReadAllText(_file);
-                var _curDdl = TableDefinition.GetTableDefinition(typeof(TDatabaseObject)).GetScriptCreateTable();
-                var _ret = _oldDdl.Equals(_curDdl);
-                return _ret;
-            }
+#else
+            if (!File.Exists(_file))
+                return false;
+
+            _oldDdl = File.ReadAllText(_file);
+#endif
+            var _curDdl = TableDefinition.GetTableDefinition(typeof(TDatabaseObject)).GetScriptCreateTable();
+            var _ret = _oldDdl.Equals(_curDdl);
+            return _ret;
 #else
             return false;
 #endif
         }
+
+#if WINDOWS_PHONE_APP
+        private static async Task<string> GetScriptAsync(string file)
+        {
+            var _check = await PCLStorage.FileSystem.Current.GetFileFromPathAsync(file);
+
+            if (_check == null)
+                return "";
+
+            return await _check.ReadAllTextAsync();
+        }
+#endif
+
 
         public bool AlterTable<TDatabaseObject>() where TDatabaseObject : IDatabaseObject
         {

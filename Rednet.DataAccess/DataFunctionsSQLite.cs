@@ -6,6 +6,8 @@ using System.Data;
 using System.Data.Common;
 #if XAMARIN
 using Mono.Data.Sqlite;
+#elif WINDOWS_PHONE_APP
+using Community.CsharpSqlite.SQLiteClient;
 #else
 using System.Data.SQLite;
 #endif
@@ -45,6 +47,8 @@ namespace Rednet.DataAccess
         {
 #if !PCL
 #if XAMARIN
+            m_Connection = new SqliteConnection(this.GetConnectionString());
+#elif WINDOWS_PHONE_APP
             m_Connection = new SqliteConnection(this.GetConnectionString());
 #else
             m_Connection = new SQLiteConnection(this.GetConnectionString());

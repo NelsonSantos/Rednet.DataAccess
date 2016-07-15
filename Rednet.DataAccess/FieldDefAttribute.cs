@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Rednet.DataAccess
 {
@@ -46,7 +47,7 @@ namespace Rednet.DataAccess
         public string Name { get; set; }
         public bool IsPrimaryKey { get; set; }
         public bool IgnoreForSave { get; set; }
-
+        public bool SerializeField { get; set; }
         public bool DisplayOnForm
         {
             get { return m_DisplayOnForm; }
@@ -79,6 +80,15 @@ namespace Rednet.DataAccess
         public string GetParameterName(IDataFunctions datafunction)
         {
             return string.Format("{0}{1}", datafunction.PrefixParameter, this.Name);
+        }
+
+        private Type m_ObjectType = null;
+        public object GetValue(object obj)
+        {
+            if (m_ObjectType == null)
+                m_ObjectType = obj.GetType();
+
+            return m_ObjectType.GetRuntimeProperty(this.Name).GetValue(obj);
         }
     }
 

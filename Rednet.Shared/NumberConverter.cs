@@ -7,21 +7,24 @@ public class NumberConverter : JsonConverter
     {
         object _ret = null;
 
-        if (objectType == typeof(Decimal))
+        if (objectType == typeof (Decimal))
             _ret = reader.Value.ToString().ToDecimal(true);
-        else if (objectType == typeof(Double))
+        else if (objectType == typeof (Double))
             _ret = reader.Value.ToString().ToDouble(true);
 
         return _ret;
     }
 
-    public override bool CanWrite { get { return false; } }
+    public override bool CanWrite
+    {
+        get { return false; }
+    }
 
     public override bool CanConvert(Type objectType)
     {
-        if (objectType == typeof(Decimal))
+        if (objectType == typeof (decimal))
             return true;
-        else if (objectType == typeof(Double))
+        else if (objectType == typeof (double))
             return true;
         else
             return false;
@@ -31,4 +34,5 @@ public class NumberConverter : JsonConverter
     {
         throw new NotImplementedException();
     }
+
 }

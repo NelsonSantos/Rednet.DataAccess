@@ -18,7 +18,7 @@ namespace TestApp.Objects
             get { return this.OrderItems.Sum(i => i.TotalItem); }
         }
 
-        [JoinField(SourceColumnNames = new [] { "OrderId" }, TargetColumnNames = new [] {"OrderId"}, JoinRelation = JoinRelation.OneToMany, JoinType = JoinType.LeftJoin)]
+        [JoinField(SourceColumnNames = new [] { "PurchaseId" }, TargetColumnNames = new [] { "PurchaseId" }, JoinRelation = JoinRelation.OneToMany, JoinType = JoinType.LeftJoin)]
         public ObservableCollection<PurchaseItem> OrderItems { get; set; } 
     }
 }

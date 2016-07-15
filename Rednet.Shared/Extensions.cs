@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-#if !PCL
+#if !PCL 
 using System.Data;
+#endif
+using System.Diagnostics;
+#if !PCL && !WINDOWS_PHONE_APP
 using System.IO.Compression;
 using System.Security.Cryptography;
 #endif
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -19,6 +22,7 @@ using Foundation;
 #endif
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using UnicodeNormalization;
 
 public static class Extensions
 {
@@ -76,7 +80,7 @@ public static class Extensions
     public static bool IsSimpleType(
         this Type type)
     {
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         return
             type.IsValueType ||
             type.IsPrimitive ||
@@ -116,7 +120,7 @@ public static class Extensions
             int.Parse(_v[2]),
             int.Parse(_v[3])
             );
-#elif !PCL && !DROID && !__IOS__
+#elif !PCL && !DROID && !__IOS__ && !WINDOWS_PHONE_APP
         var _assembly = Assembly.GetCallingAssembly();
         FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(_assembly.Location);
         var _v = fvi.FileVersion.Split('.');
@@ -126,14 +130,19 @@ public static class Extensions
             int.Parse(_v[2]),
             int.Parse(_v[3])
             );
+#elif WINDOWS_PHONE_APP
+        var _object = new object();
+        return _object.GetType().GetTypeInfo().Assembly.GetName().Version;
 #endif
         return _ret;
     }
 
     public static Stream GetStreamFromFile(string path)
     {
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         return new FileStream(path, FileMode.Open);
+#elif WINDOWS_PHONE_APP
+        return Windows.Storage.StorageFile.GetFileFromPathAsync(path).GetResults().OpenStreamForReadAsync().Result;
 #else
         return Stream.Null;
 #endif
@@ -144,11 +153,18 @@ public static class Extensions
 #if !PCL
         try
         {
+#if WINDOWS_PHONE_APP
+            var _file = Windows.Storage.StorageFile.GetFileFromPathAsync(path).GetResults();
+            using (var _writer = _file.OpenStreamForWriteAsync().Result)
+#else
             using (var _writer = new FileStream(path, FileMode.CreateNew))
+#endif
             {
                 _writer.Write(values, 0, values.Length);
                 _writer.Flush();
+#if !WINDOWS_PHONE_APP
                 _writer.Close();
+#endif
             }
         }
         catch (Exception ex)
@@ -156,13 +172,13 @@ public static class Extensions
             throw new Exception(ex.Message, ex);
         }
 #endif
-    }
+            }
 
     public static string ToMd5(this string value)
     {
 #if !PCL
         byte[] _buffer = Encoding.UTF8.GetBytes(value);
-        var _md5 = MD5.Create();
+        var _md5 = Md5.Create();
         byte[] _hash = _md5.ComputeHash(_buffer);
 
         var _ret = new StringBuilder();
@@ -180,22 +196,33 @@ public static class Extensions
 
     public static string ReturnMD5Code(string FilePath)
     {
+
 #if !PCL
         try
         {
 
+#if WINDOWS_PHONE_APP
+            var _file = Windows.Storage.StorageFile.GetFileFromPathAsync(FilePath).GetResults();
+            if (_file != null)
+#else
             var _file = new System.IO.FileInfo(FilePath);
-
             if (_file.Exists)
+#endif
             {
-                var _md5 = System.Security.Cryptography.MD5.Create();
+                var _md5 = Md5.Create();
 
+#if WINDOWS_PHONE_APP
+                using (var _reader = new System.IO.BinaryReader(_file.OpenStreamForReadAsync().Result))
+
+#else
                 using (var _reader = new System.IO.BinaryReader(_file.Open(FileMode.Open)))
+#endif
                 {
                     var _buffer = new byte[_reader.BaseStream.Length];
                     _reader.Read(_buffer, 0, _buffer.Length);
+#if !WINDOWS_PHONE_APP
                     _reader.Close();
-
+#endif
                     var _hash = _md5.ComputeHash(_buffer);
 
                     var _ret = new System.Text.StringBuilder();
@@ -223,11 +250,7 @@ public static class Extensions
     public static string RemoveAccents(this string text)
     {
 #if !PCL
-        return string.Concat(
-            text.Normalize(NormalizationForm.FormD)
-            .Where(ch => CharUnicodeInfo.GetUnicodeCategory(ch) !=
-                                          UnicodeCategory.NonSpacingMark)
-          ).Normalize(NormalizationForm.FormC);
+        return string.Concat(text.Normalize(UnicodeNormalization.NormalizationForm.FormD).Where(ch => CharUnicodeInfo.GetUnicodeCategory(ch) != UnicodeCategory.NonSpacingMark)).Normalize(UnicodeNormalization.NormalizationForm.FormC);
 #else
         return "";
 #endif
@@ -288,22 +311,28 @@ public static class Extensions
 
     public static string ConvertToString(this byte[] b)
     {
-#if !PCL
-        var _ret = Encoding.ASCII.GetString(b);
-        var _pos = _ret.IndexOf((char)0);
+        var _ret = "";
+#if !PCL && !WINDOWS_PHONE_APP
+        _ret = Encoding.ASCII.GetString(b);
+#elif WINDOWS_PHONE_APP
+        _ret = Encoding.UTF8.GetString(b, 0, b.Length);
+#endif
+        if (!_ret.Equals(""))
+        {
+            var _pos = _ret.IndexOf((char) 0);
 
-        _ret = _pos <= 0 ? "" : _ret.Substring(0, _pos);
+            _ret = _pos <= 0 ? "" : _ret.Substring(0, _pos);
+        }
 
         return _ret;
-#else
-        return "";
-#endif
     }
 
     public static char[] ConvertToChar(this byte[] b)
     {
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         return Encoding.ASCII.GetChars(b);
+#elif WINDOWS_PHONE_APP
+        return Encoding.UTF8.GetChars(b);
 #else
         return new char[] {};
 #endif
@@ -311,8 +340,10 @@ public static class Extensions
 
     public static byte[] ConvertToByteArray(this string s)
     {
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         return Encoding.ASCII.GetBytes(s);
+#elif WINDOWS_PHONE_APP
+        return Encoding.UTF8.GetBytes(s);
 #else
         return new byte[] {};
 #endif
@@ -320,8 +351,10 @@ public static class Extensions
 
     public static byte ToByte(this char c)
     {
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         return Encoding.ASCII.GetBytes(new char[] { c })[0];
+#elif WINDOWS_PHONE_APP
+        return Encoding.UTF8.GetBytes(new char[] { c })[0];
 #else
         return new byte();
 #endif
@@ -329,8 +362,10 @@ public static class Extensions
 
     public static byte[] ConvertToByteArray(this char[] chrs)
     {
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         return Encoding.ASCII.GetBytes(chrs);
+#elif WINDOWS_PHONE_APP
+        return Encoding.UTF8.GetBytes(chrs);
 #else
         return new byte[] {};
 #endif
@@ -347,17 +382,31 @@ public static class Extensions
 
     public static List<T> Clone<T>(this List<T> list)
     {
-        return JsonConvert.DeserializeObject<List<T>>(ToJson(list), new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+        return JsonConvert.DeserializeObject<List<T>>(ToJson(list), new JsonSerializerSettings() {Converters = {new NumberConverter(), new IsoDateTimeConverter() {DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff"}}});
     }
 
     public static List<TDest> Convert<TSource, TDest>(this List<TSource> list)
     {
-        return JsonConvert.DeserializeObject<List<TDest>>(ToJson(list), new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+        return JsonConvert.DeserializeObject<List<TDest>>(ToJson(list), new JsonSerializerSettings() {Converters = {new NumberConverter(), new IsoDateTimeConverter() {DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff"}}});
     }
 
-    public static string ToJson<T>(T data)
+    public static string ToJson<T>(T data, bool compress = false)
     {
         var _ret = JsonConvert.SerializeObject(data, new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+
+        if (compress)
+            _ret = _ret.CompressString();
+
+        return _ret;
+    }
+
+    public static string ToJson<T>(this IList<T> data, bool compress = false)
+    {
+        var _ret = JsonConvert.SerializeObject(data, new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+
+        if (compress)
+            _ret = _ret.CompressString();
+
         return _ret;
     }
 
@@ -365,8 +414,6 @@ public static class Extensions
     {
         return value.ToString().PadLeft(QtdeZero, '0');
     }
-
-
 
     public static int ToValue(this int? value)
     {
@@ -400,12 +447,12 @@ public static class Extensions
     /// <returns>Um valor int convertido a partir do double</returns>
     public static int ToInt(this double value)
     {
-        return (int)value;
+        return (int) value;
     }
 
     public static int ToInt(this float value)
     {
-        return (int)value;
+        return (int) value;
     }
 
     public static double ToDouble(this int value)
@@ -453,9 +500,17 @@ public static class Extensions
         return string.IsNullOrEmpty(value);
     }
 
+    public static double ApplyPercent(this double value, double percent)
+    {
+        var _tax = percent / 100d;
+        var _value = value * _tax;
+        var _ret = value + _value;
+        return _ret;
+    }
+
     public static string ToFormattedText(this double Value, int DecimalPlaces)
     {
-        return ToFormattedText((double?)Value, DecimalPlaces);
+        return ToFormattedText((double?) Value, DecimalPlaces);
     }
 
     public static string ToFormattedText(this double? Value, int DecimalPlaces)
@@ -513,7 +568,7 @@ public static class Extensions
     public static string ToStringBrasil(this DateTime value, bool showTime = true, bool showSeconds = true)
     {
         var _format = "dd/MM/yyyy" + (showTime ? (showSeconds ? " HH:mm:ss" : " HH:mm") : "");
-            
+
         return value.ToString(_format);
     }
 
@@ -550,7 +605,7 @@ public static class Extensions
                 _number = 0;
         }
 
-        double _ret = (double)_number / (double)_div_number;
+        double _ret = (double) _number/(double) _div_number;
 
         return _ret;
     }

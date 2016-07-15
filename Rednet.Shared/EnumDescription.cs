@@ -10,6 +10,17 @@ public interface IEnumDescription<T>
     string ToString();
 }
 
+[AttributeUsage(AttributeTargets.All)]
+public class DescriptionAttribute : Attribute
+{
+    public DescriptionAttribute(string description)
+    {
+        this.Description = description;
+    }
+
+    public string Description { get; set; }
+}
+
 #if !PCL
 public class EnumDescription<T> : IEnumDescription<T>
 {
@@ -25,16 +36,16 @@ public class EnumDescription<T> : IEnumDescription<T>
     {
         get
         {
+#if WINDOWS_PHONE_APP
+            FieldInfo fi = Id.GetType().GetRuntimeField(Id.ToString());
+#else
             FieldInfo fi = Id.GetType().GetField(Id.ToString());
+#endif
+            DescriptionAttribute[] _attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
 
-            DescriptionAttribute[] attributes =
-                (DescriptionAttribute[])fi.GetCustomAttributes(
-                    typeof(DescriptionAttribute),
-                    false);
-
-            if (attributes != null &&
-                attributes.Length > 0)
-                return attributes[0].Description;
+            if (_attributes != null &&
+                _attributes.Length > 0)
+                return _attributes[0].Description;
             else
                 return Id.ToString();
         }

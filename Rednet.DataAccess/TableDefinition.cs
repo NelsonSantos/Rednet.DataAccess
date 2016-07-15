@@ -29,7 +29,11 @@ namespace Rednet.DataAccess
         public static TableDefinition GetTableDefinition(Type type)
         {
 #if !PCL
+#if WINDOWS_PHONE_APP
+            return GetTableDefinition(type.GetTypeInfo().IsGenericType ? type.GenericTypeArguments[0] : type, "");
+#else
             return GetTableDefinition(type.IsGenericType ? type.GenericTypeArguments[0] : type, "");
+#endif
 #else
             return GetTableDefinition(type, "");
 #endif
@@ -78,7 +82,11 @@ namespace Rednet.DataAccess
         private void ResolveObjectDefAttribute()
         {
 #if !PCL
+#if WINDOWS_PHONE_APP
+            m_ObjectDefAttribute = this.BaseType.GetTypeInfo().GetCustomAttribute<ObjectDefAttribute>() ?? new ObjectDefAttribute();
+#else
             m_ObjectDefAttribute = this.BaseType.GetCustomAttribute<ObjectDefAttribute>() ?? new ObjectDefAttribute();
+#endif
 #endif
         }
 
@@ -117,8 +125,11 @@ namespace Rednet.DataAccess
             this.Fields = new Dictionary<string, FieldDefAttribute>();
             this.Rules = new Dictionary<string, FieldRuleAttribute>();
             this.JoinFields = new Dictionary<string, JoinFieldAttribute>();
+#if WINDOWS_PHONE_APP
+            var _srcProp = m_Type.GetRuntimeProperties();
+#else
             var _srcProp = m_Type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-
+#endif
             foreach (var p in _srcProp)
             {
                 try
@@ -133,7 +144,11 @@ namespace Rednet.DataAccess
 
                     if (_joinAtt != null)
                     {
+#if WINDOWS_PHONE_APP
+                        if (_p.PropertyType.GetTypeInfo().IsGenericType)
+#else
                         if (_p.PropertyType.IsGenericType)
+#endif
                             _joinAtt.FieldType = _p.PropertyType.GenericTypeArguments[0];
                         else
                             _joinAtt.FieldType = _p.PropertyType;
@@ -142,7 +157,11 @@ namespace Rednet.DataAccess
                         _joinAtt.TableName = _joinAtt.FieldType.Name;
                         _joinAtt.SourceTableName = m_Type.Name;
 
+#if WINDOWS_PHONE_APP
+                        var _props = _joinAtt.FieldType.GetRuntimeProperties().Where(pi => pi.CanWrite);
+#else
                         var _props = _joinAtt.FieldType.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(pi => pi.CanWrite);
+#endif
 
                         var _fieldNamesProps = _props.Where(pi => !pi.GetCustomAttributes<JoinFieldAttribute>().Any());
                         _joinAtt.FieldNames = _fieldNamesProps.Select(pi => pi.Name).ToArray();
@@ -190,12 +209,13 @@ namespace Rednet.DataAccess
                                     DisplayOnGrid = _dbAtt.DisplayOnGrid,
                                     IgnoreForSave = _dbAtt.IgnoreForSave,
                                     Precision = _dbAtt.Precision,
-                                    EditOnForm = _dbAtt.EditOnForm
+                                    EditOnForm = _dbAtt.EditOnForm,
+                                    SerializeField = _dbAtt.SerializeField
                                 });
                             }
                             else
                             {
-                                this.Fields.Add(_p.Name, new FieldDefAttribute {IsPrimaryKey = false, AutomaticValue = AutomaticValue.None, Name = _p.Name, DotNetType = _p.PropertyType, IsNullAble = true, Lenght = 0, EditOnForm = true});
+                                this.Fields.Add(_p.Name, new FieldDefAttribute {IsPrimaryKey = false, AutomaticValue = AutomaticValue.None, Name = _p.Name, DotNetType = _p.PropertyType, IsNullAble = true, Lenght = 0, EditOnForm = true, SerializeField = false});
                             }
                         }
 
@@ -444,11 +464,7 @@ namespace Rednet.DataAccess
         private void SetSqlStatement(SqlStatementsTypes type, string sql)
         {
             var _sql = m_SqlList.FirstOrDefault(s => s.TableName == this.TableName && s.Type == type) ?? new SqlStatements() { Type = type, TableName = this.TableName };
-#if !PCL
-            _sql.SqlStatement = string.Intern(sql);
-#else
             _sql.SqlStatement = sql;
-#endif
             m_SqlList.Add(_sql);
         }
 
@@ -466,7 +482,11 @@ namespace Rednet.DataAccess
 
             var _name = "";
 #if !PCL
+#if WINDOWS_PHONE_APP
+            _name = type.GetTypeInfo().IsGenericType ? type.GenericTypeArguments[0].Name : type.Name;
+#else
             _name = type.IsGenericType ? type.GenericTypeArguments[0].Name : type.Name;
+#endif
 #else
             _name = type.Name;
 #endif
@@ -686,8 +706,11 @@ namespace Rednet.DataAccess
         private static string GetDBType(FieldDefAttribute fieldDef)
         {
 #if !PCL
+#if WINDOWS_PHONE_APP
+            var _type = (fieldDef.DotNetType.GetTypeInfo().IsEnum ? "enum" : fieldDef.DotNetType.Name.ToLower());
+#else
             var _type = (fieldDef.DotNetType.IsEnum ? "enum" : fieldDef.DotNetType.Name.ToLower());
-
+#endif
             if (_type.Contains("nullable"))
             {
                 _type = Nullable.GetUnderlyingType(fieldDef.DotNetType).Name.ToLower();
@@ -724,6 +747,10 @@ namespace Rednet.DataAccess
                 case "decimal":
                 case "float":
                     return "float";
+
+                case "byte[]":
+                    return "blob";
+
                 default:
                     throw new Exception("Tipo não tratado para esse valor");
             }

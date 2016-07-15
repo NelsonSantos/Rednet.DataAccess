@@ -20,8 +20,13 @@ namespace Rednet.DataAccess.FastMember
     public abstract class TypeAccessor
     {
         // hash-table has better read-without-locking semantics than dictionary
-        private static readonly Hashtable publicAccessorsOnly = new Hashtable(), nonPublicAccessors = new Hashtable();
 
+#if WINDOWS_PHONE_APP
+        private static readonly Dictionary<Type, TypeAccessor> publicAccessorsOnly = new Dictionary<Type, TypeAccessor>();
+        private static readonly Dictionary<Type, TypeAccessor> nonPublicAccessors = new Dictionary<Type, TypeAccessor>();
+#else
+        private static readonly Hashtable publicAccessorsOnly = new Hashtable(), nonPublicAccessors = new Hashtable();
+#endif
         /// <summary>
         /// Does this type support new instances via a parameterless constructor?
         /// </summary>
@@ -85,7 +90,7 @@ namespace Rednet.DataAccess.FastMember
         }
 #endif
 
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
 
         private static AssemblyBuilder assembly;
         private static ModuleBuilder module;
@@ -180,8 +185,11 @@ namespace Rednet.DataAccess.FastMember
             }
         }
 #endif
+#if WINDOWS_PHONE_APP
+        private static readonly MethodInfo strinqEquals = typeof(string).GetRuntimeMethod("op_Equality", new Type[] { typeof(string), typeof(string) });
+#else
         private static readonly MethodInfo strinqEquals = typeof(string).GetMethod("op_Equality", new Type[] { typeof(string), typeof(string) });
-
+#endif
         /// <summary>
         /// A TypeAccessor based on a Type implementation, with available member metadata
         /// </summary>
@@ -247,9 +255,21 @@ namespace Rednet.DataAccess.FastMember
         }
         private static bool IsFullyPublic(Type type, PropertyInfo[] props, bool allowNonPublicAccessors)
         {
+#if WINDOWS_PHONE_APP
+            while (type.GetTypeInfo().IsNestedPublic) type = type.DeclaringType;
+            if (!type.GetTypeInfo().IsPublic) return false;
+
+            if (allowNonPublicAccessors)
+            {
+                for (int i = 0; i < props.Length; i++)
+                {
+                    if (props[i].GetMethod != null && props[i].GetMethod == null) return false; // non-public getter
+                    if (props[i].SetMethod != null && props[i].SetMethod == null) return false; // non-public setter
+                }
+            }
+#else
             while (type.IsNestedPublic) type = type.DeclaringType;
             if (!type.IsPublic) return false;
-
             if (allowNonPublicAccessors)
             {
                 for (int i = 0; i < props.Length; i++)
@@ -258,20 +278,30 @@ namespace Rednet.DataAccess.FastMember
                     if (props[i].GetSetMethod(true) != null && props[i].GetSetMethod(false) == null) return false; // non-public setter
                 }
             }
+#endif
 
             return true;
         }
         static TypeAccessor CreateNew(Type type, bool allowNonPublicAccessors)
         {
 #if !NO_DYNAMIC
+#if WINDOWS_PHONE_APP
+            if (typeof(IDynamicMetaObjectProvider).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
+#else
             if (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type))
+#endif
             {
                 return DynamicAccessor.Singleton;
             }
 #endif
 
+#if WINDOWS_PHONE_APP
+            PropertyInfo[] props = type.GetRuntimeProperties().ToArray();
+            FieldInfo[] fields = type.GetRuntimeFields().ToArray();
+#else
             PropertyInfo[] props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+#endif
             Dictionary<string, int> map = new Dictionary<string, int>(StringComparer.Ordinal);
             List<MemberInfo> members = new List<MemberInfo>(props.Length + fields.Length);
             int i = 0;
@@ -286,11 +316,18 @@ namespace Rednet.DataAccess.FastMember
             foreach (var field in fields) if (!map.ContainsKey(field.Name)) { map.Add(field.Name, i++); members.Add(field); }
 
             ConstructorInfo ctor = null;
+#if WINDOWS_PHONE_APP
+            if (type.GetTypeInfo().IsClass && !type.GetTypeInfo().IsAbstract)
+            {
+                ctor = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
+            }
+#else
             if (type.IsClass && !type.IsAbstract)
             {
                 ctor = type.GetConstructor(Type.EmptyTypes);
             }
-#if !__IOS__
+#endif
+#if !__IOS__ && !WINDOWS_PHONE_APP
             ILGenerator il;
             if (!IsFullyPublic(type, props, allowNonPublicAccessors))
             {
@@ -407,14 +444,22 @@ namespace Rednet.DataAccess.FastMember
 #else
             var _getter = new Func<int, object, object>((index, obj) =>
             {
+#if WINDOWS_PHONE_APP
+                return obj.GetType().GetRuntimeProperties().ToArray()[index].GetValue(obj);
+#else
                 return obj.GetType().GetProperties()[index].GetValue(obj);
+#endif
             });
 
             var _setter = new Action<int, object, object>((index, obj, value) =>
             {
                 try
                 {
+#if WINDOWS_PHONE_APP
+                    obj.GetType().GetRuntimeProperties().ToArray()[index].SetValue(obj, value);
+#else
                     obj.GetType().GetProperties()[index].SetValue(obj, value);
+#endif
                 }
                 catch (ArgumentException icex)
                 {
@@ -433,7 +478,7 @@ namespace Rednet.DataAccess.FastMember
 
         }
 
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
 
         private static void Cast(ILGenerator il, Type type, bool valueAsPointer)
         {

@@ -14,8 +14,11 @@ namespace Rednet.DataAccess.FastMember
         Member[] members;
         internal MemberSet(Type type)
         {
-            members = type.GetProperties().Cast<MemberInfo>().Concat(type.GetFields().Cast<MemberInfo>()).OrderBy(x => x.Name, StringComparer.InvariantCulture)
-                .Select(member => new Member(member)).ToArray();
+#if WINDOWS_PHONE_APP
+            members = type.GetRuntimeProperties().Cast<MemberInfo>().Concat(type.GetRuntimeFields().Cast<MemberInfo>()).OrderBy(x => x.Name).Select(member => new Member(member)).ToArray();
+#else
+            members = type.GetProperties().Cast<MemberInfo>().Concat(type.GetFields().Cast<MemberInfo>()).OrderBy(x => x.Name, StringComparer.InvariantCulture).Select(member => new Member(member)).ToArray();
+#endif
         }
         /// <summary>
         /// Return a sequence of all defined members
@@ -75,12 +78,16 @@ namespace Rednet.DataAccess.FastMember
         {
             get
             {
+#if WINDOWS_PHONE_APP
+                return this.member.DeclaringType;
+#else
                 switch (member.MemberType)
                 {
                     case MemberTypes.Field: return ((FieldInfo)member).FieldType;
                     case MemberTypes.Property: return ((PropertyInfo)member).PropertyType;
                     default: throw new NotSupportedException(member.MemberType.ToString());
                 }
+#endif
             }
         }
 
@@ -90,6 +97,9 @@ namespace Rednet.DataAccess.FastMember
         public bool CanWrite {
             get
             {
+#if WINDOWS_PHONE_APP
+                return member.DeclaringType.GetRuntimeProperty(member.Name).CanWrite;
+#else
                 switch (member.MemberType)
                 {
                     case MemberTypes.Field:
@@ -97,6 +107,7 @@ namespace Rednet.DataAccess.FastMember
                     case MemberTypes.Property: return ((PropertyInfo)member).CanWrite;
                     default: throw new NotSupportedException(member.MemberType.ToString());
                 }
+#endif
             }
         }
 
@@ -105,8 +116,12 @@ namespace Rednet.DataAccess.FastMember
         /// </summary>
         public bool IsDefined(Type attributeType)
         {
+#if WINDOWS_PHONE_APP
+            return false;
+#else
             if (attributeType == null) throw new ArgumentNullException("attributeType");
             return Attribute.IsDefined(member, attributeType);
+#endif
         }
 
 

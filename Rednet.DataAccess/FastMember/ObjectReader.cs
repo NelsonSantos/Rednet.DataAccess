@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 #if !PCL
 using System.Data;
 
@@ -72,8 +73,11 @@ namespace Rednet.DataAccess.FastMember
                                 var tmp = member.Type;
                                 memberType = Nullable.GetUnderlyingType(tmp) ?? tmp;
 
+#if WINDOWS_PHONE_APP
+                                allowNull = !(memberType.GetTypeInfo().IsValueType && memberType == tmp);
+#else
                                 allowNull = !(memberType.IsValueType && memberType == tmp);
-
+#endif
                                 // but keep checking, in case of duplicates
                             }
                             else

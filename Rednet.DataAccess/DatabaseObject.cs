@@ -23,17 +23,17 @@ using System.Data.Common;
 namespace Rednet.DataAccess
 {
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
     [Serializable]
 #endif
     public abstract class DatabaseObject<T> : IDatabaseObject, INotifyPropertyChanged
     {
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
         public event EventHandler<NotifyRecordChangesEventArgs> NotifyRecordChangesAfter;
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
         public event EventHandler<NotifyRecordChangesEventArgs> NotifyRecordChangesBefore;
@@ -41,7 +41,7 @@ namespace Rednet.DataAccess
         private static List<SqlStatements> m_SqlList = new List<SqlStatements>();
         private static object m_LockObject = new object();
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
         private Func<bool> m_ValidateDataFunction = null;
@@ -85,7 +85,11 @@ namespace Rednet.DataAccess
                 foreach (var _rule in _rules)
                 {
                     if (!_rule.IsForValidate) continue;
+#if WINDOWS_PHONE_APP
+                    var _prop = _table.BaseType.GetRuntimeProperties().FirstOrDefault(f => f.Name == _rule.Name);
+#else
                     var _prop = _table.BaseType.GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(f => f.Name == _rule.Name);
+#endif
                     if (!_rule.Validate(_prop.GetValue(this)))
                         _validatedFields.Add(new ValidatedField() { FieldMessage = _rule.ValidationText, FieldName = _rule.Name });
                 }
@@ -103,24 +107,24 @@ namespace Rednet.DataAccess
 #else
             return new Func<bool>(() => false);
 #endif
-        }
+                }
 
         private void SetValidateDataFunction(Func<bool> value)
         {
             m_ValidateDataFunction = value;
         }
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
         public event ErrorOnSaveOrDeleteEventHandler ErrorOnSaveOrDelete;
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
         public event ErrorOnValidateDataEventHandler ErrorOnValidateData;
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
         public event PropertyChangedEventHandler PropertyChanged;
@@ -151,7 +155,7 @@ namespace Rednet.DataAccess
             return _table.Fields.Select(f => f.Value);
         }
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
         [System.ComponentModel.Browsable(false)]
 #endif
         [JsonIgnore]
@@ -180,9 +184,25 @@ namespace Rednet.DataAccess
             }
         }
 
+        private static JsonSerializerSettings m_JsonSerializerSettings = null;
+        public static JsonSerializerSettings GetJsonSerializerSettings()
+        {
+            return m_JsonSerializerSettings ?? (m_JsonSerializerSettings = new JsonSerializerSettings()
+            {
+                ContractResolver = new SerializableContractResolver(),
+
+                Converters =
+                {
+                    new NumberConverter(),
+                    new IsoDateTimeConverter() {DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff"},
+                    //new ByteArrayConverter()
+                }
+            });
+        }
+
         public string ToJson(bool compressString = false)
         {
-            var _ret = JsonConvert.SerializeObject(this, new JsonSerializerSettings() {ContractResolver = new SerializableContractResolver(), Converters = {new NumberConverter(), new IsoDateTimeConverter() {DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff"}}});
+            var _ret = JsonConvert.SerializeObject(this, GetJsonSerializerSettings());
             
             if (compressString)
                 _ret = _ret.CompressString();
@@ -191,11 +211,28 @@ namespace Rednet.DataAccess
 
         }
 
-        public static Dictionary<string, object> ToDictionary(object value)
+        private static Dictionary<string, object> ToDictionary(object value)
         {
-            var _data = DatabaseObject<object>.ToJson(value);
-            var _ret = JsonConvert.DeserializeObject<Dictionary<string, object>>(_data, new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+            var _type = value.GetType();
+            var _ret = new Dictionary<string, object>();
+
+            if (_type.Name.ToLower().Contains("anonymoustype"))
+            {
+                var _data = DatabaseObject<object>.ToJson(value);
+                _ret = JsonConvert.DeserializeObject<Dictionary<string, object>>(_data, GetJsonSerializerSettings());
+            }
+            else
+            {
+                var _fields = TableDefinition.GetTableDefinition(_type).Fields.Select(f => f.Value);
+
+                foreach (var _field in _fields)
+                {
+                    _ret.Add(_field.Name, _field.GetValue(value));
+                }
+            }
+
             return _ret;
+
         }
 
         public Dictionary<string, object> ToDictionary()
@@ -205,7 +242,7 @@ namespace Rednet.DataAccess
 
         public static string ToJson(T data, bool compressString = false)
         {
-            var _ret = JsonConvert.SerializeObject(data, new JsonSerializerSettings() {ContractResolver = new SerializableContractResolver(), Converters = {new NumberConverter(), new IsoDateTimeConverter() {DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff"}}});
+            var _ret = JsonConvert.SerializeObject(data, GetJsonSerializerSettings());
 
             if (compressString)
                 _ret = _ret.CompressString();
@@ -215,7 +252,7 @@ namespace Rednet.DataAccess
 
         public static string ToJson(List<T> data, bool compressString = false)
         {
-            var _ret = JsonConvert.SerializeObject(data, new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+            var _ret = JsonConvert.SerializeObject(data, GetJsonSerializerSettings());
 
             if (compressString)
                 _ret = _ret.CompressString();
@@ -227,7 +264,11 @@ namespace Rednet.DataAccess
         public static object FromJsonType(Type type, string jsonData, bool decompressString = false)
         {
             var _object = typeof (DatabaseObject<>).MakeGenericType(type);
+#if WINDOWS_PHONE_APP
+            var _method = _object.GetRuntimeMethod("FromJson", new[] {typeof (string), typeof (bool)});
+#else
             var _method = _object.GetMethod("FromJson");
+#endif
             return _method.Invoke(null, new object[] { jsonData, decompressString });
         }
 #endif
@@ -239,7 +280,7 @@ namespace Rednet.DataAccess
             if (decompressString)
                 _data = _data.DecompressString();
 
-            return JsonConvert.DeserializeObject<T>(_data, new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+            return JsonConvert.DeserializeObject<T>(_data, GetJsonSerializerSettings());
         }
 
         public static List<T> FromJsonList(string jsonData, bool decompressString = false)
@@ -249,18 +290,18 @@ namespace Rednet.DataAccess
             if (decompressString)
                 _data = _data.DecompressString();
 
-            return JsonConvert.DeserializeObject<List<T>>(_data, new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+            return JsonConvert.DeserializeObject<List<T>>(_data, GetJsonSerializerSettings());
         }
 
         public T Clone()
         {
-            return JsonConvert.DeserializeObject<T>(this.ToJson(), new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+            return JsonConvert.DeserializeObject<T>(this.ToJson(), GetJsonSerializerSettings());
         }
 
         public TTarget CloneTo<TTarget>()
         {
             var _json = this.ToJson();
-            var _ret = JsonConvert.DeserializeObject<TTarget>(_json, new JsonSerializerSettings() { Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
+            var _ret = JsonConvert.DeserializeObject<TTarget>(_json, GetJsonSerializerSettings());
             return _ret;
         }
 
@@ -323,12 +364,16 @@ namespace Rednet.DataAccess
 
             foreach (var _field in _fields)
             {
+#if WINDOWS_PHONE_APP
+                var _prop = value.GetType().GetRuntimeProperties().FirstOrDefault(f => f.Name == _field.Name);
+#else
                 var _prop = value.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(f => f.Name == _field.Name);
+#endif
                 if (_prop != null)
                     this.SetObjectFieldValue(_field.Name, _prop.GetValue(value));
             }
 #endif
-        }
+            }
 
         private static void ThrowException(CrudReturn status)
         {
@@ -510,8 +555,11 @@ namespace Rednet.DataAccess
         public void SetObjectFieldValue(string fieldName, object value)
         {
 #if !PCL
+#if WINDOWS_PHONE_APP
+            var _prop = this.GetType().GetRuntimeProperties().FirstOrDefault(f => f.Name == fieldName);
+#else
             var _prop = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(f => f.Name == fieldName);
-
+#endif
             if (_prop != null && _prop.CanWrite)
                 _prop.SetValue(this, value, null);
 #endif
@@ -567,7 +615,7 @@ namespace Rednet.DataAccess
         public static List<T> Query(string sqlStatement, object dynamicParameters = null) 
         {
 #if !PCL
-            var _parameters = ToDictionary(dynamicParameters);
+            var _parameters = dynamicParameters == null ? null : ToDictionary(dynamicParameters);
             var _ret = TableDefinition.GetTableDefinition(typeof (T)).DefaultDataFunction.Query<T>(sqlStatement, _parameters);
             return _ret;
 #else
@@ -679,7 +727,7 @@ namespace Rednet.DataAccess
         object Obj { get; set; }
     }
 
-#if !PCL
+#if !PCL && !WINDOWS_PHONE_APP
     [Serializable]
 #endif
     public class DboCommand : IDboCommand

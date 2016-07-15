@@ -48,6 +48,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Rednet.Shared\ByteArrayConverter.cs">
+      <Link>ByteArrayConverter.cs</Link>
+    </Compile>
     <Compile Include="..\Rednet.Shared\EnumDescription.cs">
       <Link>EnumDescription.cs</Link>
     </Compile>
@@ -93,11 +96,41 @@
     <Compile Include="..\Rednet.Shared\ImageResizer.cs">
       <Link>ImageResizer.cs</Link>
     </Compile>
+    <Compile Include="..\Rednet.Shared\MD5.cs">
+      <Link>MD5.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\MD5CryptoServiceProvider.cs">
+      <Link>MD5CryptoServiceProvider.cs</Link>
+    </Compile>
     <Compile Include="..\Rednet.Shared\NumberConverter.cs">
       <Link>NumberConverter.cs</Link>
     </Compile>
     <Compile Include="..\Rednet.Shared\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\CompIterator.cs">
+      <Link>UnicodeNormalization\CompIterator.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\DecompIterator.cs">
+      <Link>UnicodeNormalization\DecompIterator.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\Helpers\AggregateRight.cs">
+      <Link>UnicodeNormalization\Helpers\AggregateRight.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\Helpers\Deque.cs">
+      <Link>UnicodeNormalization\Helpers\Deque.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\RecursDecompIterator.cs">
+      <Link>UnicodeNormalization\RecursDecompIterator.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\UChar.cs">
+      <Link>UnicodeNormalization\UChar.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\UCharIterator.cs">
+      <Link>UnicodeNormalization\UCharIterator.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.Shared\UnicodeNormalization\UNorm.cs">
+      <Link>UnicodeNormalization\UNorm.cs</Link>
     </Compile>
     <Compile Include="Resources\Resource.Designer.cs" />
   </ItemGroup>

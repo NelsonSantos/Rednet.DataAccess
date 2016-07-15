@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{0670B636-F8E2-4836-8078-6221862BF139}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Rednet.DataAccess</RootNamespace>
+    <AssemblyName>Rednet.DataAccess.WP8</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{76F1466A-8B6D-4E39-A767-685A06062A39};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetPlatformIdentifier>WindowsPhoneApp</TargetPlatformIdentifier>
+    <TargetPlatformVersion>8.1</TargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WINDOWS_PHONE_APP;NETFX_CORE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS_PHONE_APP;NETFX_CORE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_PHONE_APP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_PHONE_APP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_PHONE_APP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_PHONE_APP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Rednet.DataAccess\CompileResult.cs">
+      <Link>CompileResult.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\Dapper\SqlMapper.cs">
+      <Link>Dapper\SqlMapper.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DatabaseObject.cs">
+      <Link>DatabaseObject.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DatabaseObjectShared.cs">
+      <Link>DatabaseObjectShared.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataFunctions.cs">
+      <Link>DataFunctions.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataFunctionsSQLite.cs">
+      <Link>DataFunctionsSQLite.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\ErrorOnSaveEventArgs.cs">
+      <Link>ErrorOnSaveEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\ErrorOnValidateEventArgs.cs">
+      <Link>ErrorOnValidateEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\CallSiteCache.cs">
+      <Link>FastMember\CallSiteCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\MemberSet.cs">
+      <Link>FastMember\MemberSet.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\ObjectAccessor.cs">
+      <Link>FastMember\ObjectAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\ObjectReader.cs">
+      <Link>FastMember\ObjectReader.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FastMember\TypeAccessor.cs">
+      <Link>FastMember\TypeAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FieldDefAttribute.cs">
+      <Link>FieldDefAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\FieldRule.cs">
+      <Link>FieldRule.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\IDatabaseObject.cs">
+      <Link>IDatabaseObject.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\IFieldDefinition.cs">
+      <Link>IFieldDefinition.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\NotifyRecordChangesEventArgs.cs">
+      <Link>NotifyRecordChangesEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\ObjectDefAttribute.cs">
+      <Link>ObjectDefAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\SerializableContractResolver.cs">
+      <Link>SerializableContractResolver.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\SqlStatements.cs">
+      <Link>SqlStatements.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\TableDefinition.cs">
+      <Link>TableDefinition.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Community.CsharpSqlite.SqlLiteClient\Community.CsharpSqlite.SqlLiteClient.csproj">
+      <Project>{f398104c-e56c-437f-a525-2a0b91097e07}</Project>
+      <Name>Community.CsharpSqlite.SqlLiteClient</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rednet.Shared.WP8\Rednet.Shared.WP8.csproj">
+      <Project>{cccc1999-e699-44cb-9b3b-ef7dcf45b5fd}</Project>
+      <Name>Rednet.Shared.WP8</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
+    <VisualStudioVersion>12.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

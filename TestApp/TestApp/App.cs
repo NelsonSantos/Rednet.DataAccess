@@ -14,7 +14,7 @@ namespace TestApp
 {
     public class App : Application
     {
-        private static IFolder m_Root = FileSystem.Current.LocalStorage;
+        private static IFolder m_Root = FileSystem.Current.RoamingStorage;
         private StackLayout m_MainStack;
 
         public App()
@@ -44,25 +44,28 @@ namespace TestApp
             //setting the database
 
             // setting the database path
-            var _dataBasePath = Path.Combine(m_Root.Path, "Databases");
+            //var _dataBasePath = PortablePath.Combine(m_Root.Path, "Databases");
+            var _dataBasePath = "Databases";
             var _checkFolder = await m_Root.CheckExistsAsync(_dataBasePath);
 
-            if (_checkFolder != ExistenceCheckResult.FolderExists)
+            if (_checkFolder == ExistenceCheckResult.NotFound)
             {
-                await m_Root.CreateFolderAsync(_dataBasePath, CreationCollisionOption.FailIfExists);
+                var _temp = await m_Root.CreateFolderAsync(_dataBasePath, CreationCollisionOption.OpenIfExists);
             }
 
             // setting the db file
-            var _file = Path.Combine(_dataBasePath, "database.db3");
+            //var _file = Path.Combine(_dataBasePath, "database.db3");
+            var _file = "database.db3";
             var _checkFile = await m_Root.CheckExistsAsync(_file);
 
-            if (_checkFile != ExistenceCheckResult.FileExists)
+            if (_checkFile == ExistenceCheckResult.NotFound)
             {
-                var _retfile = m_Root.CreateFileAsync(_file, CreationCollisionOption.ReplaceExisting).Result;
+                var _retfile = await m_Root.CreateFileAsync(_file, CreationCollisionOption.ReplaceExisting);
             }
 
             // create the database connection function
             var _dbFuncName = "MyDataFunctionName";
+            _file = PortablePath.Combine(m_Root.Path, _file);
             var _function = new DataFunctionsSQLite() {DatabaseFile = _file, Name = _dbFuncName};
 
             DatabaseObjectShared.DataFunctions.Clear();

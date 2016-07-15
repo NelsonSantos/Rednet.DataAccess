@@ -43,6 +43,7 @@
     <Compile Include="DataFunctionsMySql.cs" />
     <Compile Include="DataFunctionsOracle.cs" />
     <Compile Include="DataFunctionsSQLite.cs" />
+    <Compile Include="DataFunctionsSqlServer.cs" />
     <Compile Include="ErrorOnSaveEventArgs.cs" />
     <Compile Include="ErrorOnValidateEventArgs.cs" />
     <Compile Include="FastMember\CallSiteCache.cs" />

@@ -7,18 +7,18 @@
  */
 
 #if !PCL
-#if DNXCORE50
-using IDbDataParameter = global::System.Data.Common.DbParameter;
-using IDataParameter = global::System.Data.Common.DbParameter;
-using IDbTransaction = global::System.Data.Common.DbTransaction;
-using IDbConnection = global::System.Data.Common.DbConnection;
-using IDbCommand = global::System.Data.Common.DbCommand;
-using IDataReader = global::System.Data.Common.DbDataReader;
-using IDataRecord = global::System.Data.Common.DbDataReader;
-using IDataParameterCollection = global::System.Data.Common.DbParameterCollection;
-using DataException = global::System.InvalidOperationException;
-using ApplicationException = global::System.InvalidOperationException;
-#endif
+//#if DNXCORE50
+//using IDbDataParameter = global::System.Data.Common.DbParameter;
+//using IDataParameter = global::System.Data.Common.DbParameter;
+//using IDbTransaction = global::System.Data.Common.DbTransaction;
+//using IDbConnection = global::System.Data.Common.DbConnection;
+//using IDbCommand = global::System.Data.Common.DbCommand;
+//using IDataReader = global::System.Data.Common.DbDataReader;
+//using IDataRecord = global::System.Data.Common.DbDataReader;
+//using IDataParameterCollection = global::System.Data.Common.DbParameterCollection;
+//using DataException = global::System.InvalidOperationException;
+//using ApplicationException = global::System.InvalidOperationException;
+//#endif
 
 using System;
 using System.Collections;
@@ -36,6 +36,10 @@ using System.Linq.Expressions;
 
 using System.Data.Common;
 using System.Data;
+
+#if WINDOWS_PHONE_APP
+using Community.CsharpSqlite.SQLiteClient;
+#endif
 
 namespace Rednet.DataAccess.Dapper
 {
@@ -179,7 +183,7 @@ namespace Rednet.DataAccess.Dapper
         internal IDbCommand SetupCommand(IDbConnection cnn, Action<IDbCommand, object> paramReader)
         {
             var cmd = cnn.CreateCommand();
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
             var init = GetInit(cmd.GetType());
             if (init != null) init(cmd);
 #endif
@@ -199,7 +203,7 @@ namespace Rednet.DataAccess.Dapper
 
         static SqlMapper.Link<Type, Action<IDbCommand>> commandInitCache;
 
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
         static Action<IDbCommand> GetInit(Type commandType)
         {
             if (commandType == null) return null; // GIGO
@@ -244,12 +248,20 @@ namespace Rednet.DataAccess.Dapper
 
         static MethodInfo GetBasicPropertySetter(Type declaringType, string name, Type expectedType)
         {
+#if WINDOWS_PHONE_APP
+            var prop = declaringType.GetRuntimeProperty(name);
+#else
             var prop = declaringType.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+#endif
             ParameterInfo[] indexers;
             if (prop != null && prop.CanWrite && prop.PropertyType == expectedType
                 && ((indexers = prop.GetIndexParameters()) == null || indexers.Length == 0))
             {
+#if WINDOWS_PHONE_APP
+                return prop.SetMethod;
+#else
                 return prop.GetSetMethod();
+#endif
             }
             return null;
         }
@@ -815,10 +827,18 @@ namespace Rednet.DataAccess.Dapper
             var newCopy = clone ? new Dictionary<Type, ITypeHandler>(snapshot) : snapshot;
 
 #pragma warning disable 618
+#if WINDOWS_PHONE_APP
+            typeof(TypeHandlerCache<>).MakeGenericType(type).GetRuntimeMethod("SetHandler", new [] { typeof(ITypeHandler)}).Invoke(null, new object[] { handler });
+#else
             typeof(TypeHandlerCache<>).MakeGenericType(type).GetMethod("SetHandler", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { handler });
-            if(secondary != null)
+#endif
+            if (secondary != null)
             {
+#if WINDOWS_PHONE_APP
+                typeof(TypeHandlerCache<>).MakeGenericType(secondary).GetRuntimeMethod("SetHandler", new[] { typeof(ITypeHandler) }).Invoke(null, new object[] { handler });
+#else
                 typeof(TypeHandlerCache<>).MakeGenericType(secondary).GetMethod("SetHandler", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { handler });
+#endif
             }
 #pragma warning restore 618
             if (handler == null)
@@ -846,7 +866,7 @@ namespace Rednet.DataAccess.Dapper
         /// Not intended for direct usage
         /// </summary>
         [Obsolete("Not intended for direct usage", false)]
-#if !DNXCORE50
+#if !DNXCORE50 && !WINDOWS_PHONE_APP
         [Browsable(false)]
 #endif
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -889,7 +909,7 @@ namespace Rednet.DataAccess.Dapper
         /// Get the DbType that maps to a given value
         /// </summary>
         [Obsolete("This method is for internal use only")]
-#if !DNXCORE50
+#if !DNXCORE50 && !WINDOWS_PHONE_APP
         [Browsable(false)]
 #endif
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -919,7 +939,11 @@ namespace Rednet.DataAccess.Dapper
             {
                 return DbType.Binary;
             }
+#if WINDOWS_PHONE_APP
+            if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
+#else
             if (typeof(IEnumerable).IsAssignableFrom(type))
+#endif
             {
                 return DynamicParameters.EnumerableMultiParameter;
             }
@@ -2145,7 +2169,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
                             mapped.AddParameters(cmd, identity);
                         };
                     }
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
                     else
                     {
                         var literals = GetLiteralTokens(identity.sql);
@@ -2232,7 +2256,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
             }
 #endif
             Type underlyingType = null;
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
             if (!(typeMap.ContainsKey(type) || type.IsEnum() || type.FullName == LinqBinary ||
                 (type.IsValueType()  && (underlyingType = Nullable.GetUnderlyingType(type)) != null && underlyingType.IsEnum())))
             {
@@ -2301,9 +2325,13 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
 
         sealed partial class DapperRowMetaObject : System.Dynamic.DynamicMetaObject
         {
+#if WINDOWS_PHONE_APP
+            static readonly MethodInfo getValueMethod = typeof(IDictionary<string, object>).GetRuntimeProperty("Item").GetMethod;
+            static readonly MethodInfo setValueMethod = typeof(DapperRow).GetRuntimeMethod("SetValue", new Type[] { typeof(string), typeof(object) });
+#else
             static readonly MethodInfo getValueMethod = typeof(IDictionary<string, object>).GetProperty("Item").GetGetMethod();
             static readonly MethodInfo setValueMethod = typeof(DapperRow).GetMethod("SetValue", new Type[] { typeof(string), typeof(object) });
-
+#endif
             public DapperRowMetaObject(
                 System.Linq.Expressions.Expression expression,
                 System.Dynamic.BindingRestrictions restrictions
@@ -2469,7 +2497,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
                 return GetEnumerator();
             }
 
-#region Implementation of ICollection<KeyValuePair<string,object>>
+            #region Implementation of ICollection<KeyValuePair<string,object>>
 
             void ICollection<KeyValuePair<string, object>>.Add(KeyValuePair<string, object> item)
             {
@@ -2508,9 +2536,9 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
                 get { return false; }
             }
 
-#endregion
+            #endregion
 
-#region Implementation of IDictionary<string,object>
+            #region Implementation of IDictionary<string,object>
 
             bool IDictionary<string, object>.ContainsKey(string key)
             {
@@ -2579,10 +2607,10 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
                 get { return this.Select(kv => kv.Value).ToArray(); }
             }
 
-#endregion
+            #endregion
         }
 #endif
-        private static Exception MultiMapException(IDataRecord reader)
+            private static Exception MultiMapException(IDataRecord reader)
         {
             bool hasFields = false;
             try {
@@ -2693,7 +2721,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-#if !DNXCORE50
+#if !DNXCORE50 && !WINDOWS_PHONE_APP
         [Browsable(false)]
 #endif
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -2709,7 +2737,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
         /// <summary>
         /// Internal use only
         /// </summary>
-#if !DNXCORE50
+#if !DNXCORE50 && !WINDOWS_PHONE_APP
         [Browsable(false)]
 #endif
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -2726,7 +2754,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
         /// <summary>
         /// Internal use only
         /// </summary>
-#if !DNXCORE50
+#if !DNXCORE50 && !WINDOWS_PHONE_APP
         [Browsable(false)]
 #endif
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -2750,7 +2778,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
         /// <summary>
         /// Internal use only
         /// </summary>
-#if !DNXCORE50
+#if !DNXCORE50 && !WINDOWS_PHONE_APP
         [Browsable(false)]
 #endif
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -2858,7 +2886,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
                 TypeCode typeCode;
                 if (value is IConvertible)
                 {
-                    typeCode = ((IConvertible)value).GetTypeCode();
+                    typeCode = (value as IConvertible).GetTypeCode();
                 }
                 else
                 {
@@ -2884,9 +2912,14 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
         }
 
         // look for ? / @ / : *by itself*
-        static readonly Regex smellsLikeOleDb = new Regex(@"(?<![a-z0-9@_])[?@:](?![a-z0-9@_])", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled),
-            literalTokens = new Regex(@"(?<![a-z0-9_])\{=([a-z0-9_]+)\}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled),
-            pseudoPositional = new Regex(@"\?([a-z_][a-z0-9_]*)\?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+#if WINDOWS_PHONE_APP
+        private const RegexOptions RegexOptionsConst = RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant;
+#else
+        private const RegexOptions RegexOptionsConst = RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.Compiled;
+#endif
+        private static readonly Regex smellsLikeOleDb = new Regex(@"(?<![a-z0-9@_])[?@:](?![a-z0-9@_])", RegexOptionsConst);
+        private static readonly Regex literalTokens = new Regex(@"(?<![a-z0-9_])\{=([a-z0-9_]+)\}", RegexOptionsConst);
+        private static readonly Regex pseudoPositional = new Regex(@"\?([a-z_][a-z0-9_]*)\?", RegexOptionsConst);
 
         /// <summary>
         /// Represents a placeholder for a value that should be replaced as a literal value in the resulting sql
@@ -2921,7 +2954,11 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
             if (tokens.Count != 0) ReplaceLiterals(parameters, command, tokens);
         }
 
+#if WINDOWS_PHONE_APP
+        internal static readonly MethodInfo format = typeof(SqlMapper).GetRuntimeMethod("Format", new [] {typeof(object)});
+#else
         internal static readonly MethodInfo format = typeof(SqlMapper).GetMethod("Format", BindingFlags.Public | BindingFlags.Static);
+#endif
         /// <summary>
         /// Convert numeric values to their string form for SQL literal purposes
         /// </summary>
@@ -3031,7 +3068,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
             return list.Count == 0 ? LiteralToken.None : list;
         }
 
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
         /// <summary>
         /// Internal use only
         /// </summary>
@@ -3402,9 +3439,13 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
             MethodInfo method;
             return toStrings.TryGetValue(typeCode, out method) ? method : null;
         }
-        static readonly MethodInfo StringReplace = typeof(string).GetPublicInstanceMethod("Replace", new Type[] { typeof(string), typeof(string) }),
-            InvariantCulture = typeof(CultureInfo).GetProperty("InvariantCulture", BindingFlags.Public | BindingFlags.Static).GetGetMethod();
 
+        private static readonly MethodInfo StringReplace = typeof (string).GetPublicInstanceMethod("Replace", new Type[] {typeof (string), typeof (string)});
+#if WINDOWS_PHONE_APP
+        private static readonly MethodInfo InvariantCulture = typeof(CultureInfo).GetRuntimeProperty("InvariantCulture").GetMethod;
+#else
+        private static readonly MethodInfo InvariantCulture = typeof(CultureInfo).GetProperty("InvariantCulture", BindingFlags.Public | BindingFlags.Static).GetGetMethod();
+#endif
         private static int ExecuteCommand(IDbConnection cnn, ref CommandDefinition command, Action<IDbCommand, object> paramReader)
         {
             IDbCommand cmd = null;
@@ -3568,12 +3609,13 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
             return (T)Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
-        static readonly MethodInfo
-                    enumParse = typeof(Enum).GetMethod("Parse", new Type[] { typeof(Type), typeof(string), typeof(bool) }),
-                    getItem = typeof(IDataRecord).GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(p => p.GetIndexParameters().Any() && p.GetIndexParameters()[0].ParameterType == typeof(int))
-                        .Select(p => p.GetGetMethod()).First();
-
+#if WINDOWS_PHONE_APP
+        private static readonly MethodInfo enumParse = typeof (Enum).GetRuntimeMethod("Parse", new Type[] {typeof (Type), typeof (string), typeof (bool)});
+        private static readonly MethodInfo getItem = typeof(IDataRecord).GetRuntimeProperties().Where(p => p.GetIndexParameters().Any() && p.GetIndexParameters()[0].ParameterType == typeof(int)).Select(p => p.GetMethod).First();
+#else
+        private static readonly MethodInfo enumParse = typeof(Enum).GetMethod("Parse", new Type[] { typeof(Type), typeof(string), typeof(bool) });
+        private static readonly MethodInfo getItem = typeof(IDataRecord).GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetIndexParameters().Any() && p.GetIndexParameters()[0].ParameterType == typeof(int)).Select(p => p.GetGetMethod()).First();
+#endif
         /// <summary>
         /// Gets type-map for the given type
         /// </summary>
@@ -3608,7 +3650,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
         }
 
         // use Hashtable to get free lockless reading
-#if DNXCORE50
+#if DNXCORE50 || WINDOWS_PHONE_APP
         private static readonly Dictionary<Type,ITypeMap> _typeMaps = new Dictionary<Type, ITypeMap>();
 #else
         private static readonly Hashtable _typeMaps = new Hashtable();
@@ -3642,7 +3684,7 @@ this IDbConnection cnn, string sql, Func<TFirst, TSecond, TThird, TFourth, TRetu
             PurgeQueryCacheByType(type);
         }
 
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
         /// <summary>
         /// Internal use only
         /// </summary>
@@ -4067,8 +4109,13 @@ Type type, IDataReader reader, int startBound = 0, int length = -1, bool returnN
         {
             if (to == null) return null;
             MethodInfo[] fromMethods, toMethods;
+#if WINDOWS_PHONE_APP
+            return ResolveOperator(fromMethods = from.GetRuntimeMethods().ToArray(), from, to, "op_Implicit")
+                ?? ResolveOperator(toMethods = to.GetRuntimeMethods().ToArray(), from, to, "op_Implicit")
+#else
             return ResolveOperator(fromMethods = from.GetMethods(BindingFlags.Static | BindingFlags.Public), from, to, "op_Implicit")
                 ?? ResolveOperator(toMethods = to.GetMethods(BindingFlags.Static | BindingFlags.Public), from, to, "op_Implicit")
+#endif
                 ?? ResolveOperator(fromMethods, from, to, "op_Explicit")
                 ?? ResolveOperator(toMethods, from, to, "op_Explicit");
 
@@ -4085,7 +4132,7 @@ Type type, IDataReader reader, int startBound = 0, int length = -1, bool returnN
             return null;
         }
 
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
         private static void LoadLocal(ILGenerator il, int index)
         {
             if (index < 0 || index >= short.MaxValue) throw new ArgumentNullException("index");
@@ -4733,7 +4780,7 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 
             if (templates != null)
             {
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
                 foreach (var template in templates)
                 {
                     var newIdent = identity.ForDynamicParameters(template.GetType());
@@ -4979,7 +5026,7 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 #endif
             if (setter != null) goto MAKECALLBACK;
 
-#if !__IOS__
+#if !__IOS__ && !WINDOWS_PHONE_APP
             // Come on let's build a method, let's build it, let's build it now!
             var dm = new DynamicMethod(string.Format("ExpressionParam{0}", Guid.NewGuid()), null, new[] { typeof(object), this.GetType() }, true);
             var il = dm.GetILGenerator();
@@ -5072,7 +5119,7 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 
         internal static class CachedOutputSetters<T>
         {
-#if DNXCORE50
+#if DNXCORE50 || WINDOWS_PHONE_APP
             public static readonly Dictionary<string, Action<object, DynamicParameters>> Cache = new Dictionary<string, Action<object, DynamicParameters>>();
 #else
             public static readonly Hashtable Cache = new Hashtable();
@@ -5394,13 +5441,20 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 #endif
         internal static MethodInfo GetPropertySetter(PropertyInfo propertyInfo, Type type)
         {
+#if  WINDOWS_PHONE_APP
+            if (propertyInfo.DeclaringType == type) return propertyInfo.SetMethod;
+#else
             if (propertyInfo.DeclaringType == type) return propertyInfo.GetSetMethod(true);
+#endif
 #if DNXCORE50
             return propertyInfo.DeclaringType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
                     .Single(x => x.Name == propertyInfo.Name
                         && x.PropertyType == propertyInfo.PropertyType
                         && IsParameterMatch(x.GetIndexParameters(), propertyInfo.GetIndexParameters())
                         ).GetSetMethod(true);
+#else
+#if  WINDOWS_PHONE_APP
+            return propertyInfo.DeclaringType.GetRuntimeProperty(propertyInfo.Name).SetMethod;
 #else
             return propertyInfo.DeclaringType.GetProperty(
                    propertyInfo.Name,
@@ -5410,19 +5464,25 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
                    propertyInfo.GetIndexParameters().Select(p => p.ParameterType).ToArray(),
                    null).GetSetMethod(true);
 #endif
+#endif
         }
 
         internal static List<PropertyInfo> GetSettableProps(Type t)
         {
-            return t
-                  .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                  .Where(p => GetPropertySetter(p, t) != null)
-                  .ToList();
+#if  WINDOWS_PHONE_APP
+            return t.GetRuntimeProperties().Where(p => GetPropertySetter(p, t) != null).ToList();
+#else
+            return t.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(p => GetPropertySetter(p, t) != null).ToList();
+#endif
         }
 
         internal static List<FieldInfo> GetSettableFields(Type t)
         {
+#if  WINDOWS_PHONE_APP
+            return t.GetRuntimeFields().ToList();
+#else
             return t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).ToList();
+#endif
         }
 
         /// <summary>
@@ -5433,7 +5493,11 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
         /// <returns>Matching constructor or default one</returns>
         public ConstructorInfo FindConstructor(string[] names, Type[] types)
         {
+#if  WINDOWS_PHONE_APP
+            var constructors = _type.GetTypeInfo().DeclaredConstructors;
+#else
             var constructors = _type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+#endif
             foreach (ConstructorInfo ctor in constructors.OrderBy(c => c.IsPublic ? 0 : (c.IsPrivate ? 2 : 1)).ThenBy(c => c.GetParameters().Length))
             {
                 ParameterInfo[] ctorParameters = ctor.GetParameters();
@@ -5472,11 +5536,15 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
         /// </summary>
         public ConstructorInfo FindExplicitConstructor()
         {
+#if  WINDOWS_PHONE_APP
+            var constructors = _type.GetTypeInfo().DeclaredConstructors;
+#else
             var constructors = _type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+#endif
 #if DNXCORE50
             var withAttr = constructors.Where(c => c.CustomAttributes.Any(x => x.AttributeType == typeof(ExplicitConstructorAttribute))).ToList();
 #else
-            var withAttr = constructors.Where(c => c.GetCustomAttributes(typeof(ExplicitConstructorAttribute), true).Length > 0).ToList();
+            var withAttr = constructors.Where(c => c.GetCustomAttributes(typeof(ExplicitConstructorAttribute), true).Any()).ToList();
 #endif
 
             if (withAttr.Count == 1)
@@ -5574,7 +5642,11 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
         /// <returns>Default constructor</returns>
         public ConstructorInfo FindConstructor(string[] names, Type[] types)
         {
+#if WINDOWS_PHONE_APP
+            return _type.GetTypeInfo().DeclaredConstructors.FirstOrDefault();
+#else
             return _type.GetConstructor(new Type[0]);
+#endif
         }
 
         /// <summary>
@@ -6106,7 +6178,11 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 #if DNXCORE50
             return typeof(ValueType).IsAssignableFrom(type) && type != typeof(ValueType);
 #else
+#if WINDOWS_PHONE_APP
+            return type.IsValueType();
+#else
             return type.IsValueType;
+#endif
 #endif
         }
         public static bool IsEnum(this Type type)
@@ -6114,10 +6190,14 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 #if DNXCORE50
             return typeof(Enum).IsAssignableFrom(type) && type != typeof(Enum);
 #else
+#if WINDOWS_PHONE_APP
+            return type.IsEnum();
+#else
             return type.IsEnum;
 #endif
+#endif
         }
-#if DNXCORE50
+#if DNXCORE50 || WINDOWS_PHONE_APP
         public static TypeCode GetTypeCode(Type type)
         {
             if (type == null) return TypeCode.Empty;
@@ -6161,6 +6241,9 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 #if DNXCORE50
             var method = type.GetMethod(name, types);
             return (method != null && method.IsPublic && !method.IsStatic) ? method : null;
+#elif WINDOWS_PHONE_APP
+            var method = type.GetRuntimeMethod(name, types);
+            return (method != null && method.IsPublic && !method.IsStatic) ? method : null;
 #else
             return type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public, null, types, null);
 #endif
@@ -6168,5 +6251,6 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 
 
     }
+
 }
 #endif
