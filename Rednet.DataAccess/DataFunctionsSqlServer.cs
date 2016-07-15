@@ -6,6 +6,10 @@ using System.Data.SqlClient;
 
 namespace Rednet.DataAccess
 {
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class DataFunctionsSqlServer : DataFunctions<DataFunctionsSqlServer>
     {
         public DataFunctionsSqlServer()
