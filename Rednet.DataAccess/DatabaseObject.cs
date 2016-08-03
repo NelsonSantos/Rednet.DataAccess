@@ -43,6 +43,7 @@ namespace Rednet.DataAccess
 
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
+        [JsonIgnore]
 #endif
         private Func<bool> m_ValidateDataFunction = null;
 
@@ -580,7 +581,7 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        #region "SQL Translator"
+#region "SQL Translator"
 
         private static DboCommand GetDboCommand(Expression<Func<T, bool>> predicate = null, bool useFieldNames = true, SqlStatementsTypes sqlType = SqlStatementsTypes.Select, object obj  = null)
         {
@@ -615,8 +616,14 @@ namespace Rednet.DataAccess
         public static List<T> Query(string sqlStatement, object dynamicParameters = null) 
         {
 #if !PCL
-            var _parameters = dynamicParameters == null ? null : ToDictionary(dynamicParameters);
-            var _ret = TableDefinition.GetTableDefinition(typeof (T)).DefaultDataFunction.Query<T>(sqlStatement, _parameters);
+            var _function = TableDefinition.GetTableDefinition(typeof (T)).DefaultDataFunction;
+            string _parameters = null;
+            if (dynamicParameters != null)
+            {
+                _parameters = JsonConvert.SerializeObject(dynamicParameters, GetJsonSerializerSettings());
+            }
+            var _ret = _function.Query<T>(sqlStatement, _parameters);
+            //var _ret = TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.Query<T>(sqlStatement, dynamicParameters);
             return _ret;
 #else
             throw new Exception("Código executado via PCL!");
@@ -716,7 +723,7 @@ namespace Rednet.DataAccess
             return new DboCommand(ObjectName, _cmdText, _argNames.ToArray(), _argValues.ToArray());
         }
 
-        #endregion
+#endregion
     }
 
     public interface IDboCommand

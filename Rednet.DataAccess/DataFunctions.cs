@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 #if WINDOWS_PHONE_APP
 using PCLStorage;
 #endif
@@ -59,6 +60,7 @@ namespace Rednet.DataAccess
         TDatabaseObject Load<TDatabaseObject>(string sqlStatement, object dynamicParameters = null);
         List<TDatabaseObject> Query<TDatabaseObject>(DboCommand command, bool useFieldNames = true);
         List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, object dynamicParameters = null);
+        List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, string jsonValue = null);
         TDatabaseObject ReloadMe<TDatabaseObject>(DboCommand command);
         CrudReturn SaveChanges<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject;
         CrudReturn Insert<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject;
@@ -103,7 +105,7 @@ namespace Rednet.DataAccess
             m_DatabaseType = databaseType;
         }
 
-        public Dictionary<string, object> ToDictionary(object value)
+        private Dictionary<string, object> ToDictionary(object value)
         {
             var _data = DatabaseObject<object>.ToJson(value);
             var _ret = JsonConvert.DeserializeObject<Dictionary<string, object>>(_data, new JsonSerializerSettings() { ContractResolver = new SerializableContractResolver(), Converters = { new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" } } });
@@ -118,7 +120,14 @@ namespace Rednet.DataAccess
 
         public TDatabaseObject Load<TDatabaseObject>(string sqlStatement, object dynamicParameters = null)
         {
-            return this.Query<TDatabaseObject>(sqlStatement, dynamicParameters).FirstOrDefault();
+            var _parameters = dynamicParameters == null ? null : this.ToDictionary(dynamicParameters);
+            return this.Query<TDatabaseObject>(sqlStatement, _parameters).FirstOrDefault();
+        }
+
+        public List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, string jsonValue = null)
+        {
+            var _parameters = jsonValue == null ? null : JObject.Parse(jsonValue);
+            return this.Query<TDatabaseObject>(sqlStatement, _parameters);
         }
 
         public List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, object dynamicParameters = null)
@@ -126,15 +135,8 @@ namespace Rednet.DataAccess
             try
             {
                 IDataReader _rows = null;
-                if (dynamicParameters != null)
-                {
-                    var _parameters = ToDictionary(dynamicParameters);
-                    _rows = GetDataReader(sqlStatement, _parameters);
-                }
-                else
-                {
-                    _rows = GetDataReader(sqlStatement);
-                }
+                var _parameters = dynamicParameters == null ? null : this.ToDictionary(dynamicParameters);
+                _rows = GetDataReader(sqlStatement, _parameters);
                 var _ret = ReadRowsFromReader<TDatabaseObject>(_rows);
                 return _ret;
             }

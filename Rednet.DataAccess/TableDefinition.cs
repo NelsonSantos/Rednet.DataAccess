@@ -65,11 +65,19 @@ namespace Rednet.DataAccess
 
         public IDataFunctions DefaultDataFunction
         {
-            get { return m_DefaultDataFunctions; }
+            get
+            {
+                if (m_DefaultDataFunctions == null)
+                    this.ResolveDefaultDataFunction();
+
+                return m_DefaultDataFunctions;
+            }
         }
 
         private void ResolveDefaultDataFunction()
         {
+            if (DatabaseObjectShared.DataFunctions.Count <= 0) return;
+
             var _att = this.ObjectDefAttribute;
             m_DefaultDataFunctions = DatabaseObjectShared.DataFunctions[_att == null ? DatabaseObjectShared.DefaultDataFunctionName : _att.DatabaseName];
         }

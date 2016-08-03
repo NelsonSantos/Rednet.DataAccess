@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace Rednet.Shared.GPS
 {
     public class Location
@@ -7,8 +9,9 @@ namespace Rednet.Shared.GPS
             Latitude = latitude;
             Longitude = longitude;
         }
-
+        [JsonProperty("lat")]
         public double Latitude { get; set; }
+        [JsonProperty("lng")]
         public double Longitude { get; set; }
     }
 }

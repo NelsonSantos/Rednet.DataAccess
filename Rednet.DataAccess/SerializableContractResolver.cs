@@ -13,6 +13,8 @@ namespace Rednet.DataAccess
     public class SerializableContractResolver : Newtonsoft.Json.Serialization.DefaultContractResolver
     {
 
+        private static string[] m_NamesToRemove = new[] {"m_ValidateDataFunction"};
+
         protected override IList<Newtonsoft.Json.Serialization.JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {
             var _isAnonymous = type.Name.ToLower().Contains("anonymoustype");
@@ -36,7 +38,7 @@ namespace Rednet.DataAccess
 
             var _fields = TableDefinition.GetTableDefinition(type).Fields.Select(f => f.Value);
 
-            foreach (var _field in _fields)
+            foreach (var _field in _fields.Where(f => !m_NamesToRemove.Contains(f.Name)))
             {
                 var _p = _properties.FirstOrDefault(p => p.PropertyName == _field.Name);
                 if (_p != null)
