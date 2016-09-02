@@ -79,7 +79,7 @@ namespace Rednet.DataAccess
             if (DatabaseObjectShared.DataFunctions.Count <= 0) return;
 
             var _att = this.ObjectDefAttribute;
-            m_DefaultDataFunctions = DatabaseObjectShared.DataFunctions[_att == null ? DatabaseObjectShared.DefaultDataFunctionName : _att.DatabaseName];
+            m_DefaultDataFunctions = DatabaseObjectShared.DataFunctions[_att == null ? DatabaseObjectShared.DefaultDataFunctionName : _att.DefaultDataFunctionName];
         }
 
         public ObjectDefAttribute ObjectDefAttribute

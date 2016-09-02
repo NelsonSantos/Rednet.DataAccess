@@ -184,7 +184,7 @@ public static class Extensions
         var _ret = new StringBuilder();
         for (int i = 0; i < _hash.Length; i++)
         {
-            _ret.Append(_hash[i].ToString("X2"));
+            _ret.Append(_hash[i].ToString("x2"));
         }
 
         return _ret.ToString();
