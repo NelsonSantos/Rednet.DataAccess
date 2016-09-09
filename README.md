@@ -5,6 +5,13 @@
 ### Setup
 * Available on NuGet: https://www.nuget.org/packages/Rednet.DataAccess [![NuGet](https://img.shields.io/nuget/v/Rednet.DataAccess.svg?label=NuGet)](https://www.nuget.org/packages/Rednet.DataAccess/)
 
+### Suportted platforms
+* Xamarin Android
+* Xamarin iOS
+* Windows Phone 8.1
+* Portable
+* NET 4.5 (ASP.NET, Windows Forms, WPF)
+
 ## For update news, follow me on twitter:
 * [@nelson_santos](https://twitter.com/rednetsoftware)
 * [@rednetsoftware](https://twitter.com/nelson_santos)
