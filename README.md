@@ -5,7 +5,7 @@
 ### Setup
 * Available on NuGet: https://www.nuget.org/packages/Rednet.DataAccess [![NuGet](https://img.shields.io/nuget/v/Rednet.DataAccess.svg?label=NuGet)](https://www.nuget.org/packages/Rednet.DataAccess/)
 
-### Suportted platforms
+### Supportted platforms
 * Xamarin Android
 * Xamarin iOS
 * Windows Phone 8.1
@@ -30,7 +30,7 @@ Before use, we need to set up the database configuration. We need todo this only
 
 `DatabaseObjectShared` is a class that will contains the parameters to connect on database.
 `DataFunctionsSQLite` is one of the supported databases of the framework.
-Currently supports **Oracle**, **MySQL** and **SQLite**. PostgreSQL and SQLServer soon.
+Currently supports **Oracle**, **MySQL**, **SQLServer** and **SQLite**. PostgreSQL soon.
 
 ```C#
 var _file = Path.Combine(_dataBasePath, "RednetAccess.db3");
