@@ -474,14 +474,15 @@ namespace Rednet.DataAccess
         }
 #endif
 
-        public static TDatabaseObject PopulateData<TDatabaseObject>(IDictionary<string, object> row, IDictionary<string, object> checkList = null, string baseKey = null, string baseName = null)// where TDatabaseObject : IDatabaseObject
+        public static TDatabaseObject PopulateData<TDatabaseObject>(IDictionary<string, object> row, IDictionary<string, object> checkList = null, string baseKey = null, string baseName = null) // where TDatabaseObject : IDatabaseObject
         {
 #if !PCL
             object _ret = null;
             var _type = typeof (TDatabaseObject);
 
 #if WINDOWS_PHONE_APP
-            if (_type.GetTypeInfo().IsPrimitive || _type.GetTypeInfo().ImplementedInterfaces.Any(i => i.Name == "IDatabaseObject"))
+            var _typeInfo = _type.GetTypeInfo();
+            if (_typeInfo.IsPrimitive || _typeInfo.ImplementedInterfaces.All(i => i.Name != "IDatabaseObject"))
                 return default(TDatabaseObject);
 #else
             if (_type.IsPrimitive || _type.GetInterface("IDatabaseObject") == null)
@@ -525,7 +526,8 @@ namespace Rednet.DataAccess
                 if (_fields.Contains(_member.Name))
                 {
 #if WINDOWS_PHONE_APP
-                    var _t = _member.Type.GetTypeInfo().IsGenericType ? _member.Type.GenericTypeArguments[0] : _member.Type;
+                    var _tInfo = _member.Type.GetTypeInfo();
+                    var _t = _tInfo.IsGenericType ? _tInfo.GenericTypeArguments[0] : _tInfo.AsType();
 #else
                     var _t = _member.Type.IsGenericType ? _member.Type.GenericTypeArguments[0] : _member.Type;
 #endif
@@ -534,7 +536,7 @@ namespace Rednet.DataAccess
                         // este metodo era utilizado quando esta function estava em DatabaseObject
                         //var _v = typeof(DataFunctions<T>).MakeGenericType(_t).GetMethod("PopulateData").Invoke(null, new object[] { row, _list, _kchk, _sqlName });
 #if WINDOWS_PHONE_APP
-                        var _v = typeof(DataFunctions<T>).GetTypeInfo().GetDeclaredMethod("PopulateData").MakeGenericMethod(_t).Invoke(null, new object[] { row, _list, _kchk, _sqlName });
+                        var _v = typeof (DataFunctions<T>).GetTypeInfo().GetDeclaredMethod("PopulateData").MakeGenericMethod(_t).Invoke(null, new object[] {row, _list, _kchk, _sqlName});
 #else
                         var _v = typeof(DataFunctions<T>).GetMethod("PopulateData").MakeGenericMethod(_t).Invoke(null, new object[] { row, _list, _kchk, _sqlName });
 #endif
@@ -588,7 +590,7 @@ namespace Rednet.DataAccess
 #else
                             if (_member.Type.IsEnum)
 #endif
-                                _acessor[_object, _member.Name] = Convert.ChangeType(_value, typeof(int));
+                                _acessor[_object, _member.Name] = Convert.ChangeType(_value, typeof (int));
                             else
                                 _acessor[_object, _member.Name] = Convert.ChangeType(_value, _member.Type);
                         }
@@ -605,11 +607,11 @@ namespace Rednet.DataAccess
 
             _list.Add(_kchk, _object);
 
-            return (TDatabaseObject)_object;
+            return (TDatabaseObject) _object;
 #else
             return default(TDatabaseObject);
 #endif
-                        }
+        }
 
         private static IEnumerable<FieldDefAttribute> GetPrimaryKeyFields<TDatabaseObject>()// where TDatabaseObject : IDatabaseObject
         {
@@ -763,24 +765,29 @@ namespace Rednet.DataAccess
             var _file = Path.Combine(path, DatabaseObject<TDatabaseObject>.ObjectName + ".sql");
 #if !PCL
 #if WINDOWS_PHONE_APP
-            var _task = Task.Run(async () =>
+            var _result = Task.Run(async () =>
             {
-                var _folder = await PCLStorage.FileSystem.Current.GetFolderFromPathAsync(path);
+                var _storage = PCLStorage.FileSystem.Current.RoamingStorage;
 
-                if (_folder == null)
-                    await PCLStorage.FileSystem.Current.LocalStorage.CreateFolderAsync(path, CreationCollisionOption.FailIfExists);
-
-                var _check = await PCLStorage.FileSystem.Current.GetFileFromPathAsync(_file);
-                if (_check != null)
-                    await _check.DeleteAsync();
+                if (await _storage.CheckExistsAsync(path) != ExistenceCheckResult.FolderExists)
+                    await _storage.CreateFolderAsync(path, CreationCollisionOption.FailIfExists);
 
 
-                var _newfile = await PCLStorage.FileSystem.Current.LocalStorage.CreateFileAsync(_file, CreationCollisionOption.ReplaceExisting);
+                if (await _storage.CheckExistsAsync(_file) == ExistenceCheckResult.FileExists)
+                {
+                    var _delete = await _storage.GetFileAsync(_file);
+                    await _delete.DeleteAsync();
+                }
+
+                var _newfile = await _storage.CreateFileAsync(_file, CreationCollisionOption.ReplaceExisting);
 
                 await _newfile.WriteAllTextAsync(_ddl);
 
-            });
-            _task.Start();
+                return true;
+
+            }).Result;
+
+            var _a = _result;
 #else
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
@@ -798,7 +805,9 @@ namespace Rednet.DataAccess
             var _oldDdl = "";
 
 #if WINDOWS_PHONE_APP
-            _oldDdl = GetScriptAsync(_file).Result;
+
+            _oldDdl = Task.Run(async () => await GetScriptAsync(_file)).Result;
+
             if (_oldDdl == "")
                 return false;
 #else
@@ -818,12 +827,17 @@ namespace Rednet.DataAccess
 #if WINDOWS_PHONE_APP
         private static async Task<string> GetScriptAsync(string file)
         {
-            var _check = await PCLStorage.FileSystem.Current.GetFileFromPathAsync(file);
+            var _storage = PCLStorage.FileSystem.Current.RoamingStorage;
 
-            if (_check == null)
-                return "";
+            if (await _storage.CheckExistsAsync(file) == ExistenceCheckResult.FileExists)
+            {
+                var _check = await _storage.GetFileAsync(file);
+                if (_check == null)
+                    return "";
+                return await _check.ReadAllTextAsync();
+            }
 
-            return await _check.ReadAllTextAsync();
+            return "";
         }
 #endif
 

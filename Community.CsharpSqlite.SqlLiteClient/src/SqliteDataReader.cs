@@ -57,8 +57,8 @@ namespace Community.CsharpSqlite.SQLiteClient
                 return obj.ToLowerInvariant().GetHashCode();
             }
         }
-        private CaseInsentitiveComparer _InsenCompater = new CaseInsentitiveComparer();
-
+        private CaseInsentitiveComparer m_InsenComparer = new CaseInsentitiveComparer();
+        
 		#region Fields
 		
 
@@ -86,7 +86,7 @@ namespace Community.CsharpSqlite.SQLiteClient
 #if NET_2_0
 			column_names_insens = new Hashtable (StringComparer.InvariantCultureIgnoreCase);
 #else
-            column_names_insens = new Dictionary<string, int>(_InsenCompater);
+            column_names_insens = new Dictionary<string, int>(m_InsenComparer);
 
             // FIX
             //column_names_insens = new Hashtable (CaseInsensitiveHashCodeProvider.DefaultInvariant,
@@ -235,10 +235,14 @@ namespace Community.CsharpSqlite.SQLiteClient
 								
 								// If the column was declared as a 'date' or 'datetime', let's play
 								// nice and return a DateTime (version 3 only).
-								if (declmode[i] == 2)
-                  if (data_row[i] == null) data_row[i] = null;
-                  else data_row[i] = DateTime.Parse((string)data_row[i], System.Globalization.CultureInfo.InvariantCulture);
-								break;
+						        if (declmode[i] == 2)
+						        {
+						            if (data_row[i] == null)
+						                data_row[i] = null;
+						            else
+						                data_row[i] = DateTime.Parse((string) data_row[i], System.Globalization.CultureInfo.InvariantCulture);
+						        }
+						        break;
 							case 4:
 								int blobbytes = Sqlite3.ColumnBytes (pVm, i);
                                 byte[] blob = Sqlite3.ColumnByteArray(pVm, i);

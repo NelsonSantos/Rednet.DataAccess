@@ -31,6 +31,8 @@
 
 using System;
 using System.Data;
+using System.Data;
+
 #if NET_2_0
 using System.Data.Common;
 #endif

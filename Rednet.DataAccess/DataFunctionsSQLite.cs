@@ -21,6 +21,14 @@ namespace Rednet.DataAccess
 #if !PCL
         private static IDbConnection m_Connection = null;
 #endif
+
+        public DataFunctionsSQLite(string databaseFile)
+            : this()
+        {
+            this.DatabaseFile = databaseFile;
+            this.GetNewConnection();
+        }
+
         public DataFunctionsSQLite()
             : base(DatabaseType.SQLite)
         {
@@ -49,7 +57,8 @@ namespace Rednet.DataAccess
 #if XAMARIN
             m_Connection = new SqliteConnection(this.GetConnectionString());
 #elif WINDOWS_PHONE_APP
-            m_Connection = new SqliteConnection(this.GetConnectionString());
+            if (this.DatabaseFile != null)
+                m_Connection = new SqliteConnection(this.GetConnectionString());
 #else
             m_Connection = new SQLiteConnection(this.GetConnectionString());
 #endif

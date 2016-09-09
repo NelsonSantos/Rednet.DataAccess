@@ -3393,6 +3393,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 public static class Sqlite3
 {
@@ -3534,28 +3535,50 @@ public static class Sqlite3
     public static extern int Changes(IntPtr db);
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_prepare_v2", CallingConvention = CallingConvention.Cdecl)]
-    public static extern Result Prepare2(IntPtr db, [MarshalAs(UnmanagedType.LPStr)] string sql, int numBytes, out IntPtr stmt, IntPtr pzTail);
+    public static extern Result Prepare2(IntPtr db, IntPtr pSql, int numBytes, out IntPtr stmt, out IntPtr pzTail);
+    //public static extern Result Prepare2(IntPtr db, [MarshalAs(UnmanagedType.LPStr)] string sql, int numBytes, out IntPtr stmt, out IntPtr pzTail);
 
-#if NETFX_CORE
-		[DllImport (LibraryPath, EntryPoint = "sqlite3_prepare_v2", CallingConvention = CallingConvention.Cdecl)]
-		public static extern Result Prepare2 (IntPtr db, byte[] queryBytes, int numBytes, out IntPtr stmt, IntPtr pzTail);
-#endif
-
-    public static IntPtr Prepare2(IntPtr db, string query)
+    public static IntPtr Prepare2(IntPtr db, ref string query)
     {
         IntPtr stmt;
-#if NETFX_CORE
-            byte[] queryBytes = System.Text.UTF8Encoding.UTF8.GetBytes (query);
-            var r = Prepare2 (db, queryBytes, queryBytes.Length, out stmt, IntPtr.Zero);
-#else
-        var r = Prepare2(db, query, System.Text.UTF8Encoding.UTF8.GetByteCount(query), out stmt, IntPtr.Zero);
-#endif
+
+        byte[] b = ToUTF8(query);
+        GCHandle handle = GCHandle.Alloc(b, GCHandleType.Pinned);
+        IntPtr pSql = handle.AddrOfPinnedObject();
+
+        IntPtr pzTail;
+        var r = Prepare2(db, pSql, b.Length - 1, out stmt, out pzTail);
+
+        query = UTF8ToString(pzTail, -1);
+
         if (r != Result.OK)
         {
             throw SqliteException.New(r, GetErrmsg(db));
         }
+
+        handle.Free();
+
         return stmt;
     }
+    ////#if NETFX_CORE
+    //    [DllImport(LibraryPath, EntryPoint = "sqlite3_prepare_v2", CallingConvention = CallingConvention.Cdecl)]
+    //    public static extern Result Prepare2Internal(IntPtr db, byte[] queryBytes, int numBytes, out IntPtr stmt, IntPtr pzTail);
+    ////#endif
+
+    //    public static IntPtr Prepare2(IntPtr db, string query, out IntPtr stmt, IntPtr pzTail)
+    //    {
+    ////#if NETFX_CORE
+    //        byte[] queryBytes = System.Text.UTF8Encoding.UTF8.GetBytes(query);
+    //        var r = Prepare2Internal(db, queryBytes, queryBytes.Length, out stmt, pzTail);
+    ////#else
+    ////        var r = Prepare2Internal(db, query, System.Text.UTF8Encoding.UTF8.GetByteCount(query), out stmt, IntPtr.Zero);
+    ////#endif
+    //        if (r != Result.OK)
+    //        {
+    //            throw SqliteException.New(r, GetErrmsg(db));
+    //        }
+    //        return stmt;
+    //    }
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_step", CallingConvention = CallingConvention.Cdecl)]
     public static extern Result Step(IntPtr stmt);
@@ -3563,10 +3586,10 @@ public static class Sqlite3
     [DllImport(LibraryPath, EntryPoint = "sqlite3_reset", CallingConvention = CallingConvention.Cdecl)]
     public static extern Result Reset(IntPtr stmt);
 
-    [DllImport(LibraryPath, EntryPoint = "Finalize", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_finalize", CallingConvention = CallingConvention.Cdecl)]
     public static extern Result Finalize(IntPtr stmt);
 
-    [DllImport(LibraryPath, EntryPoint = "LastInsertRowid", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_last_insert_rowid", CallingConvention = CallingConvention.Cdecl)]
     public static extern long LastInsertRowid(IntPtr db);
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_errmsg16", CallingConvention = CallingConvention.Cdecl)]
@@ -3584,7 +3607,7 @@ public static class Sqlite3
     public static extern IntPtr BindParameterNameInternal(IntPtr stmt, int index);
     public static string BindParameterName(IntPtr stmt, int index)
     {
-        return Marshal.PtrToStringUni(BindParameterNameInternal(stmt, index));
+        return Marshal.PtrToStringAnsi(BindParameterNameInternal(stmt, index));
     }
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_bind_parameter_index", CallingConvention = CallingConvention.Cdecl)]
@@ -3599,13 +3622,13 @@ public static class Sqlite3
     [DllImport(LibraryPath, EntryPoint = "sqlite3_bind_int64", CallingConvention = CallingConvention.Cdecl)]
     public static extern int BindInt64(IntPtr stmt, int index, long val);
 
-    [DllImport(LibraryPath, EntryPoint = "BindDouble", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_bind_double", CallingConvention = CallingConvention.Cdecl)]
     public static extern int BindDouble(IntPtr stmt, int index, double val);
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_bind_text16", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
     public static extern int BindText(IntPtr stmt, int index, [MarshalAs(UnmanagedType.LPWStr)] string val, int n, IntPtr free);
 
-    [DllImport(LibraryPath, EntryPoint = "BindBlob", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_bind_blob", CallingConvention = CallingConvention.Cdecl)]
     public static extern int BindBlob(IntPtr stmt, int index, byte[] val, int n, IntPtr free);
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_column_count", CallingConvention = CallingConvention.Cdecl)]
@@ -3625,28 +3648,28 @@ public static class Sqlite3
     public static extern IntPtr ColumnDeclTypeInternal(IntPtr stmt, int index);
     public static string ColumnDeclType(IntPtr stmt, int index)
     {
-        return Marshal.PtrToStringUni(ColumnDeclTypeInternal(stmt, index));
+        return Marshal.PtrToStringAnsi(ColumnDeclTypeInternal(stmt, index));
     }
 
-    [DllImport(LibraryPath, EntryPoint = "ColumnType", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_column_type", CallingConvention = CallingConvention.Cdecl)]
     public static extern ColType ColumnType(IntPtr stmt, int index);
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_column_int", CallingConvention = CallingConvention.Cdecl)]
     public static extern int ColumnInt(IntPtr stmt, int index);
 
-    [DllImport(LibraryPath, EntryPoint = "ColumnInt64", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_column_int64", CallingConvention = CallingConvention.Cdecl)]
     public static extern long ColumnInt64(IntPtr stmt, int index);
 
-    [DllImport(LibraryPath, EntryPoint = "ColumnDouble", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_column_double", CallingConvention = CallingConvention.Cdecl)]
     public static extern double ColumnDouble(IntPtr stmt, int index);
 
-    [DllImport(LibraryPath, EntryPoint = "ColumnString", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_column_text", CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr ColumnText(IntPtr stmt, int index);
 
-    [DllImport(LibraryPath, EntryPoint = "ColumnString16", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_column_text16", CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr ColumnText16(IntPtr stmt, int index);
 
-    [DllImport(LibraryPath, EntryPoint = "ColumnBlob", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(LibraryPath, EntryPoint = "sqlite3_column_blob", CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr ColumnBlob(IntPtr stmt, int index);
 
     [DllImport(LibraryPath, EntryPoint = "sqlite3_column_bytes", CallingConvention = CallingConvention.Cdecl)]
@@ -3881,6 +3904,50 @@ public static class Sqlite3
         Null = 5
     }
 
+    /// <summary>
+    /// Converts a string to a UTF-8 encoded byte array sized to include a null-terminating character.
+    /// </summary>
+    /// <param name="sourceText">The string to convert to UTF-8</param>
+    /// <returns>A byte array containing the converted string plus an extra 0 terminating byte at the end of the array.</returns>
+    public static byte[] ToUTF8(string sourceText)
+    {
+        var _utf8 = Encoding.UTF8;
+
+        Byte[] byteArray;
+        int nlen = _utf8.GetByteCount(sourceText) + 1;
+
+        byteArray = new byte[nlen];
+        nlen = _utf8.GetBytes(sourceText, 0, sourceText.Length, byteArray, 0);
+        byteArray[nlen] = 0;
+
+        return byteArray;
+    }
+
+    /// <summary>
+    /// Converts a UTF-8 encoded IntPtr of the specified length into a .NET string
+    /// </summary>
+    /// <param name="nativestring">The pointer to the memory where the UTF-8 string is encoded</param>
+    /// <param name="nativestringlen">The number of bytes to decode</param>
+    /// <returns>A string containing the translated character(s)</returns>
+    public static string UTF8ToString(IntPtr nativestring, int nativestringlen)
+    {
+        var _utf8 = Encoding.UTF8;
+
+        if (nativestringlen == 0 || nativestring == IntPtr.Zero) return "";
+        if (nativestringlen == -1)
+        {
+            do
+            {
+                nativestringlen++;
+            } while (Marshal.ReadByte(nativestring, nativestringlen) != 0);
+        }
+
+        byte[] byteArray = new byte[nativestringlen];
+
+        Marshal.Copy(nativestring, byteArray, 0, nativestringlen);
+
+        return _utf8.GetString(byteArray, 0, nativestringlen);
+    }
 }
 
 public class SqliteException : Exception

@@ -210,7 +210,7 @@ namespace Community.CsharpSqlite.SQLiteClient
 				db_file = null;
 				db_mode = 0644;
 				
-				string[] conn_pieces = connstring.Split (',');
+				string[] conn_pieces = connstring.Split (';');
 				for (int i = 0; i < conn_pieces.Length; i++) {
 					string piece = conn_pieces [i].Trim ();
 					if (piece.Length == 0) { // ignore empty elements
@@ -224,29 +224,28 @@ namespace Community.CsharpSqlite.SQLiteClient
 					string tvalue = arg_pieces[1].Trim ();
 					string tvalue_lc = arg_pieces[1].ToLower ().Trim ();
 					switch (token) {
-#if NET_2_0
-						case "DataSource":
-#endif
-						case "uri": 
-							if (tvalue_lc.StartsWith ("file://")) {
-								db_file = tvalue.Substring (7);
-							} else if (tvalue_lc.StartsWith ("file:")) {
-								db_file = tvalue.Substring (5);
-							} else if (tvalue_lc.StartsWith ("/")) {
-								db_file = tvalue;
-#if NET_2_0
-							} else if (tvalue_lc.StartsWith ("|DataDirectory|",
-											 StringComparison.InvariantCultureIgnoreCase)) {
-								AppDomainSetup ads = AppDomain.CurrentDomain.SetupInformation;
-								string filePath = String.Format ("App_Data{0}{1}",
-												 Path.DirectorySeparatorChar,
-												 tvalue_lc.Substring (15));
+                        case "datasource":
+                        case "data source":
+                        case "uri":
+                            db_file = tvalue;
+//                            if (tvalue_lc.StartsWith ("file://")) {
+//								db_file = tvalue.Substring (7);
+//							} else if (tvalue_lc.StartsWith ("file:")) {
+//								db_file = tvalue.Substring (5);
+//							} else if (tvalue_lc.StartsWith ("/")) {
+//#if NET_2_0
+//							} else if (tvalue_lc.StartsWith ("|DataDirectory|",
+//											 StringComparison.InvariantCultureIgnoreCase)) {
+//								AppDomainSetup ads = AppDomain.CurrentDomain.SetupInformation;
+//								string filePath = String.Format ("App_Data{0}{1}",
+//												 Path.DirectorySeparatorChar,
+//												 tvalue_lc.Substring (15));
 								
-								db_file = Path.Combine (ads.ApplicationBase, filePath);
-#endif
-							} else {
-								throw new InvalidOperationException ("Invalid connection string: invalid URI");
-							}
+//								db_file = Path.Combine (ads.ApplicationBase, filePath);
+//#endif
+//							} else {
+//								throw new InvalidOperationException ("Invalid connection string: invalid URI");
+//							}
 							break;
 
 						case "mode": 

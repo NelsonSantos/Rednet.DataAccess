@@ -30,13 +30,16 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
+using System;
+
+//namespace Community.CsharpSqlite.SqlLiteClient.Fix.System.Data
 namespace System.Data
 {
-	/// <summary>
-	/// Gets the data type of a field, a property, or a Parameter object of a .NET data provider.
-	/// </summary>
+    /// <summary>
+    /// Gets the data type of a field, a property, or a Parameter object of a .NET data provider.
+    /// </summary>
 #if !NET_2_0
-	[Serializable]
+    [Serializable]
 #endif
 	public enum DbType
 	{

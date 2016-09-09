@@ -63,6 +63,9 @@ namespace Rednet.DataAccess.FastMember
     public sealed class Member
     {
         private readonly MemberInfo member;
+        private object m_CanWrite = null;
+        private Type m_Type = null;
+
         internal Member(MemberInfo member)
         {
             this.member = member;
@@ -78,36 +81,62 @@ namespace Rednet.DataAccess.FastMember
         {
             get
             {
+                if (m_Type != null) return m_Type;
 #if WINDOWS_PHONE_APP
-                return this.member.DeclaringType;
+                m_Type = ((PropertyInfo)this.member).PropertyType;
 #else
                 switch (member.MemberType)
                 {
-                    case MemberTypes.Field: return ((FieldInfo)member).FieldType;
-                    case MemberTypes.Property: return ((PropertyInfo)member).PropertyType;
-                    default: throw new NotSupportedException(member.MemberType.ToString());
+                    case MemberTypes.Field: 
+                        m_Type = ((FieldInfo)member).FieldType;
+                        break;
+                    case MemberTypes.Property: 
+                        m_Type = ((PropertyInfo)member).PropertyType;
+                        break;
+                    default: 
+                        throw new NotSupportedException(member.MemberType.ToString());
                 }
 #endif
+                return m_Type;
             }
         }
 
         /// <summary>
         /// Indicates when this member can be writed
         /// </summary>
-        public bool CanWrite {
+        public bool CanWrite
+        {
             get
             {
+                if (m_CanWrite != null) return (bool) m_CanWrite;
+
 #if WINDOWS_PHONE_APP
-                return member.DeclaringType.GetRuntimeProperty(member.Name).CanWrite;
+                try
+                {
+                    m_CanWrite = member.DeclaringType.GetRuntimeProperty(member.Name).CanWrite;
+                }
+                catch (NullReferenceException nrex)
+                {
+                    m_CanWrite = false;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(ex.Message);
+                }
 #else
                 switch (member.MemberType)
                 {
                     case MemberTypes.Field:
-                        return true;
-                    case MemberTypes.Property: return ((PropertyInfo)member).CanWrite;
-                    default: throw new NotSupportedException(member.MemberType.ToString());
+                        m_CanWrite =  true;
+                        break;
+                    case MemberTypes.Property: 
+                        m_CanWrite = ((PropertyInfo)member).CanWrite;
+                        break;
+                    default: 
+                        throw new NotSupportedException(member.MemberType.ToString());
                 }
 #endif
+                return (bool) m_CanWrite;
             }
         }
 

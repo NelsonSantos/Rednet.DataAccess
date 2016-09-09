@@ -62,13 +62,24 @@ namespace Rednet.DataAccess.FastMember
         {
             if (type == null) throw new ArgumentNullException("type");
             var lookup = allowNonPublicAccessors ? nonPublicAccessors : publicAccessorsOnly;
+#if WINDOWS_PHONE_APP
+            TypeAccessor obj = null;
+            if (lookup.ContainsKey(type))
+                obj = lookup[type];
+#else
             TypeAccessor obj = (TypeAccessor)lookup[type];
+#endif
             if (obj != null) return obj;
 
             lock (lookup)
             {
                 // double-check
+#if WINDOWS_PHONE_APP
+                if (lookup.ContainsKey(type))
+                    obj = (TypeAccessor)lookup[type];
+#else
                 obj = (TypeAccessor)lookup[type];
+#endif
                 if (obj != null) return obj;
 
                 obj = CreateNew(type, allowNonPublicAccessors);

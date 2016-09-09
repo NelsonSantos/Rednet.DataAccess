@@ -1,7 +1,7 @@
 ﻿{
   "supports": {},
   "dependencies": {
-    "Newtonsoft.Json": "8.0.3"
+    "Newtonsoft.Json": "9.0.1"
   },
   "frameworks": {
     "WindowsPhoneApp,Version=v8.1": {}

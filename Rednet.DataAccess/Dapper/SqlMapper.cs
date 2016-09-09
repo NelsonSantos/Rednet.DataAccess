@@ -6185,18 +6185,20 @@ string name, object value = null, DbType? dbType = null, ParameterDirection? dir
 #endif
 #endif
         }
+
         public static bool IsEnum(this Type type)
         {
 #if DNXCORE50
             return typeof(Enum).IsAssignableFrom(type) && type != typeof(Enum);
 #else
 #if WINDOWS_PHONE_APP
-            return type.IsEnum();
+            return type.GetTypeInfo().IsEnum;
 #else
             return type.IsEnum;
 #endif
 #endif
         }
+
 #if DNXCORE50 || WINDOWS_PHONE_APP
         public static TypeCode GetTypeCode(Type type)
         {

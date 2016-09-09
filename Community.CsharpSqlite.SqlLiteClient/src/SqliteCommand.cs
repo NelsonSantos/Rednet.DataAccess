@@ -43,6 +43,7 @@ using System.Data;
 //#if NET_2_0
 using System.Data.Common;
 using System.Reflection;
+using System.Runtime.InteropServices;
 //#endif
 using Community.CsharpSqlite;
 
@@ -291,10 +292,16 @@ namespace Community.CsharpSqlite.SQLiteClient
 			if (sql_params.Count == 0) return;
 			
 			int pcount = Sqlite3.BindParameterCount(pStmt);
+		    var _replaces = "@?:$".ToCharArray();
 
-			for (int i = 1; i <= pcount; i++) 
+			for (int i = 1; i <= pcount; i++)
 			{
-				String name = Sqlite3.BindParameterName(pStmt, i);
+			    var name = Sqlite3.BindParameterName(pStmt, i);
+
+			    foreach (var _replace in _replaces)
+			    {
+                    name = name.Replace(_replace.ToString(), "");
+			    }
 
 				SqliteParameter param = null;
 				if (name != null)
@@ -406,15 +413,17 @@ namespace Community.CsharpSqlite.SQLiteClient
 			}
 		}
 
-		private void GetNextStatement (string pzStart, ref IntPtr pzTail, ref IntPtr pStmt)
-		{
-		    UTF8Encoding encoding = new UTF8Encoding();
-            SqliteError err = (SqliteError)Sqlite3.Prepare2((parent_conn as SqliteConnection).Handle2, pzStart, pzStart.Length, out pStmt, pzTail);
-			if (err != SqliteError.OK)
-				throw new SqliteSyntaxException (GetError3());
-		}
-		
-		// Executes a statement and ignores its result.
+		//private void GetNextStatement (string pzStart, ref IntPtr pzTail, ref IntPtr pStmt)
+		//{
+		//    //UTF8Encoding encoding = new UTF8Encoding();
+
+  //          SqliteError err = (SqliteError)Sqlite3.Prepare2((parent_conn as SqliteConnection).Handle2, pzStart, -1 /*pzStart.Length*/, out pStmt, out pzTail);
+		//	if (err != SqliteError.OK)
+		//		throw new SqliteSyntaxException (GetError3());
+		//}
+
+
+        // Executes a statement and ignores its result.
         private void ExecuteStatement(IntPtr pStmt)
         {
 			int cols;
@@ -570,38 +579,38 @@ namespace Community.CsharpSqlite.SQLiteClient
 		public IDataReader ExecuteReader (CommandBehavior behavior, bool want_results, out int rows_affected)
 		{
 			Prepare ();
-			
-			// The SQL string may contain multiple sql commands, so the main
-			// thing to do is have Sqlite iterate through the commands.
-			// If want_results, only the last command is returned as a
-			// DataReader.  Otherwise, no command is returned as a
-			// DataReader.
-		
-			//IntPtr psql; // pointer to SQL command
-			
-			// Sqlite 2 docs say this: By default, SQLite assumes that all data uses a fixed-size 8-bit 
-			// character (iso8859).  But if you give the --enable-utf8 option to the configure script, then the 
-			// library assumes UTF-8 variable sized characters. This makes a difference for the LIKE and GLOB 
-			// operators and the LENGTH() and SUBSTR() functions. The static string sqlite_encoding will be set 
-			// to either "UTF-8" or "iso8859" to indicate how the library was compiled. In addition, the sqlite.h 
-			// header file will define one of the macros SQLITE_UTF8 or SQLITE_ISO8859, as appropriate.
-			// 
-			// We have no way of knowing whether Sqlite 2 expects ISO8859 or UTF-8, but ISO8859 seems to be the
-			// default.  Therefore, we need to use an ISO8859(-1) compatible encoding, like ANSI.
-			// OTOH, the user may want to specify the encoding of the bytes stored in the database, regardless
-			// of what Sqlite is treating them as, 
-			
-			// For Sqlite 3, we use the UTF-16 prepare function, so we need a UTF-16 string.
-			/*
-			if (parent_conn.Version == 2)
-				psql = Sqlite.StringToHeap (sql.Trim(), parent_conn.Encoding);
-			else
-				psql = Marshal.StringToHGlobalUni (sql.Trim());
-            */
+
+            // The SQL string may contain multiple sql commands, so the main
+            // thing to do is have Sqlite iterate through the commands.
+            // If want_results, only the last command is returned as a
+            // DataReader.  Otherwise, no command is returned as a
+            // DataReader.
+
+            //IntPtr psql; // pointer to SQL command
+
+            // Sqlite 2 docs say this: By default, SQLite assumes that all data uses a fixed-size 8-bit 
+            // character (iso8859).  But if you give the --enable-utf8 option to the configure script, then the 
+            // library assumes UTF-8 variable sized characters. This makes a difference for the LIKE and GLOB 
+            // operators and the LENGTH() and SUBSTR() functions. The static string sqlite_encoding will be set 
+            // to either "UTF-8" or "iso8859" to indicate how the library was compiled. In addition, the sqlite.h 
+            // header file will define one of the macros SQLITE_UTF8 or SQLITE_ISO8859, as appropriate.
+            // 
+            // We have no way of knowing whether Sqlite 2 expects ISO8859 or UTF-8, but ISO8859 seems to be the
+            // default.  Therefore, we need to use an ISO8859(-1) compatible encoding, like ANSI.
+            // OTOH, the user may want to specify the encoding of the bytes stored in the database, regardless
+            // of what Sqlite is treating them as, 
+
+            // For Sqlite 3, we use the UTF-16 prepare function, so we need a UTF-16 string.
+
+            //if (parent_conn.Version == 2)
+            //    psql = Sqlite.StringToHeap(sql.Trim(), parent_conn.Encoding);
+            //else
+            //    var psql = Marshal.StringToHGlobalUni(sql.Trim());
+
             string queryval = sql.Trim();
             //string pzTail = sql.Trim();
-            IntPtr pzTail = IntPtr.Zero;
-            IntPtr errMsgPtr;
+		    //IntPtr pzTail = IntPtr.Zero;
+            Sqlite3.Result errMsgPtr;
 
             (parent_conn as SqliteConnection).StartExec ();
 
@@ -612,17 +621,21 @@ namespace Community.CsharpSqlite.SQLiteClient
 					IntPtr pStmt = IntPtr.Zero;
                     
                     //queryval = pzTail;
-                    GetNextStatement(queryval, ref pzTail, ref pStmt);
+				    pStmt = Sqlite3.Prepare2((parent_conn as SqliteConnection).Handle2, ref queryval);
+                    //GetNextStatement(queryval, ref pzTail, ref pStmt);
                 
 			        if (pStmt == null)
 					    throw new Exception();
-					
-					// pzTail is positioned after the last byte in the
-					// statement, which will be the NULL character if
-					// this was the last statement.
-					bool last = pzTail == IntPtr.Zero;
 
-					try {
+                    // pzTail is positioned after the last byte in the
+                    // statement, which will be the NULL character if
+                    // this was the last statement.
+
+                    //bool last = pzTail == IntPtr.Zero;
+                    bool last = queryval.Length == 0;
+
+                    try
+                    {
 						if ((parent_conn as SqliteConnection).Version == 3)
 							BindParameters3 (pStmt);
 						
@@ -636,7 +649,7 @@ namespace Community.CsharpSqlite.SQLiteClient
 						
 					} finally {
 						//if (parent_conn.Version == 3) 
-							Sqlite3.Finalize (pStmt);
+							errMsgPtr = Sqlite3.Finalize (pStmt);
 						//else
 						//	Sqlite.sqlite_finalize (pStmt, out errMsgPtr);
 					}
