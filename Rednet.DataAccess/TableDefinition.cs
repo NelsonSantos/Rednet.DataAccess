@@ -721,7 +721,12 @@ namespace Rednet.DataAccess
 #endif
             if (_type.Contains("nullable"))
             {
-                _type = Nullable.GetUnderlyingType(fieldDef.DotNetType).Name.ToLower();
+                var _t = Nullable.GetUnderlyingType(fieldDef.DotNetType);
+#if WINDOWS_PHONE_APP
+                _type = _t.GetTypeInfo().IsEnum ? "enum" : _t.Name.ToLower();
+#else
+                _type = _t.IsEnum ? "enum" : _t.Name.ToLower();
+#endif
                 fieldDef.IsNullAble = true;
             }
 
@@ -763,7 +768,7 @@ namespace Rednet.DataAccess
                     throw new Exception("Tipo não tratado para esse valor");
             }
 #else
-            return "";
+                return "";
 #endif
         }
     }
