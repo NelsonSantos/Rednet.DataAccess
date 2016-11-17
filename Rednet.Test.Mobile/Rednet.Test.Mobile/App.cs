@@ -45,8 +45,8 @@ namespace Rednet.Test.Mobile
             //setting the database
 
             // setting the database path
-            //var _dataBasePath = PortablePath.Combine(m_Root.Path, "Databases");
-            var _dataBasePath = "Databases";
+            var _dataBasePath = PortablePath.Combine(m_Root.Path, "Databases");
+            //var _dataBasePath = "Databases";
 
             if (await m_Root.CheckExistsAsync(_dataBasePath) == ExistenceCheckResult.NotFound)
             {
@@ -54,8 +54,8 @@ namespace Rednet.Test.Mobile
             }
 
             // setting the db file
-            var _file = Path.Combine(_dataBasePath, "database.db3");
-            //var _file = "database.db3";
+            //var _file = Path.Combine(_dataBasePath, "database.db3");
+            var _file = "database.db3";
 
             if (await m_Root.CheckExistsAsync(_file) == ExistenceCheckResult.NotFound)
             {
@@ -135,6 +135,17 @@ namespace Rednet.Test.Mobile
                 User.DeleteAll();
             };
 
+            // search for Nelson
+            var _searchFor = new Button { Text = "Search for Nelson..." };
+            _searchFor.Clicked += (sender, args) =>
+            {
+                // for all rows parameters must be null
+                foreach (var _item in User.Query(u => u.Name.Contains("nelson")))
+                {
+                    Debug.WriteLine("User Name: {0}", _item.Name);
+                }
+            };
+
             var _jsonData = "{ Id : 9999, Name : \"Nelson Santos\", Password : \"123\", UserType : 1 }"; // UserType -> 0 = Simple / 1 = Administrator
 
             var _loadFromJson = new Button { Text = "Load from Json data\r\r" + _jsonData };
@@ -176,6 +187,7 @@ namespace Rednet.Test.Mobile
             m_MainStack.Children.Add(_deleteOnlyAdm);
             m_MainStack.Children.Add(_deleteOnlySimple);
             m_MainStack.Children.Add(_deleteAll);
+            m_MainStack.Children.Add(_searchFor);
             m_MainStack.Children.Add(_loadFromJson);
         }
 

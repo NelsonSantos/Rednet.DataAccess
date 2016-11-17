@@ -140,8 +140,9 @@ namespace Rednet.DataAccess
                     args[i] = CompileExpr(call.Arguments[i], queryNames, queryValues, prefix, name, isLeft);
                 }
 
-
-                queryNames.RemoveAt(queryNames.Count - 1);
+                // CHANGE ID = 1 -> comentado ABAIXO pois no momento da definição precisava concatenar com os caracteres "%" no início e no final quando usado like com apenas um parametro
+                //                  validar em outras situações
+                //                  queryNames.RemoveAt(queryNames.Count - 1);
 
                 var sqlCall = "";
                 var _parName = "";
@@ -159,22 +160,27 @@ namespace Rednet.DataAccess
                 {
                     if (call.Object != null && call.Object.Type == typeof(string))
                     {
-                        //sqlCall = "(" + obj.CommandText + " like ('%' || " + args[0].CommandText + " || '%'))";
-                        sqlCall = string.Format("({0}.{1} like ('%' || {2} || '%'))", name, obj.CommandText, args[0].CommandText);
+                        // CHANGE ID = 1
+                        sqlCall = string.Format("({0}.{1} like {2}{1})", name, obj.CommandText, prefix);
+                        queryValues[0] = "%" + queryValues[0] + "%";
                     }
                     else
                     {
-                        //sqlCall = "(" + args[0].CommandText + " in " + obj.CommandText + ")";
-                        sqlCall = string.Format("({0}.{1} in {2})", name, args[0].CommandText, obj.CommandText);
+                        // CHANGE ID = 1
+                        sqlCall = string.Format("({0}.{1} in ({2}{1}))", name, obj.CommandText, prefix);
                     }
                 }
                 else if (call.Method.Name == "StartsWith" && args.Length == 1)
                 {
-                    sqlCall = "(" + obj.CommandText + " like (" + args[0].CommandText + " || '%'))";
+                    // CHANGE ID = 1
+                    sqlCall = string.Format("({0}.{1} like {2}{1})", name, obj.CommandText, prefix);
+                    queryValues[0] = queryValues[0] + "%";
                 }
                 else if (call.Method.Name == "EndsWith" && args.Length == 1)
                 {
-                    sqlCall = "(" + obj.CommandText + " like ('%' || " + args[0].CommandText + "))";
+                    // CHANGE ID = 1
+                    sqlCall = string.Format("({0}.{1} like {2}{1})", name, obj.CommandText, prefix);
+                    queryValues[0] = "%" + queryValues[0];
                 }
                 else if (call.Method.Name == "Equals" && args.Length == 1)
                 {
