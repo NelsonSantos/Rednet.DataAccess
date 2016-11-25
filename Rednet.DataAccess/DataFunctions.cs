@@ -84,8 +84,11 @@ namespace Rednet.DataAccess
         bool Exists(DboCommand command);
         Task<bool> ExistsAsync(DboCommand command);
 #endif
+        Task<CrudReturn> ExecuteStatementAsync(string statement, object parameter = null);
         CrudReturn ExecuteStatement(string statement, object parameter = null);
+        Task<object> ExecuteScalarAsync(string sqlStatement, object parameter = null);
         object ExecuteScalar(string sqlStatement, object parameter = null);
+        Task<TResult> ExecuteScalarAsync<TResult>(string sqlStatement, object parameter = null);
         TResult ExecuteScalar<TResult>(string sqlStatement, object parameter = null);
     }
 
@@ -710,6 +713,11 @@ namespace Rednet.DataAccess
         public abstract IDbConnection Connection { get; }
 #endif
 
+        public async Task<CrudReturn> ExecuteStatementAsync(string sqlStatement, object parameter = null)
+        {
+            return await Task.Run(() => this.ExecuteStatement(sqlStatement, parameter));
+        }
+
         public CrudReturn ExecuteStatement(string sqlStatement, object parameter = null)
         {
             var _ret = new CrudReturn
@@ -735,6 +743,11 @@ namespace Rednet.DataAccess
             return _ret;
         }
 
+        public async Task<object> ExecuteScalarAsync(string sqlStatement, object parameter = null)
+        {
+            return await Task.Run(() => this.ExecuteScalar(sqlStatement, parameter));
+        }
+
         public object ExecuteScalar(string sqlStatement, object parameter = null)
         {
 #if !PCL
@@ -753,6 +766,11 @@ namespace Rednet.DataAccess
 #else
             return null;
 #endif
+        }
+
+        public async Task<TResult> ExecuteScalarAsync<TResult>(string sqlStatement, object parameter = null)
+        {
+            return await Task.Run(() => this.ExecuteScalar<TResult>(sqlStatement, parameter));
         }
 
         public TResult ExecuteScalar<TResult>(string sqlStatement, object parameter = null)

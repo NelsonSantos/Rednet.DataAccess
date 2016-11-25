@@ -33,20 +33,20 @@ namespace Rednet.DataAccess
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-        public event EventHandler<NotifyRecordChangesEventArgs> NotifyRecordChangesAfter;
+            public event EventHandler<NotifyRecordChangesEventArgs> NotifyRecordChangesAfter;
+
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-        public event EventHandler<NotifyRecordChangesEventArgs> NotifyRecordChangesBefore;
+            public event EventHandler<NotifyRecordChangesEventArgs> NotifyRecordChangesBefore;
 
         private static List<SqlStatements> m_SqlList = new List<SqlStatements>();
         private static object m_LockObject = new object();
 
 #if !PCL && !WINDOWS_PHONE_APP
-        [field: NonSerialized]
-        [JsonIgnore]
+        [field: NonSerialized] [JsonIgnore]
 #endif
-        private Func<bool> m_ValidateDataFunction = null;
+            private Func<bool> m_ValidateDataFunction = null;
 
         protected virtual void OnBeforeSaveData(NotifyRecordChangesEventArgs e)
         {
@@ -80,7 +80,7 @@ namespace Rednet.DataAccess
 #if !PCL
             return m_ValidateDataFunction ?? (m_ValidateDataFunction = (() =>
             {
-                var _table = TableDefinition.GetTableDefinition(typeof(T));
+                var _table = TableDefinition.GetTableDefinition(typeof (T));
                 var _rules = _table.Rules.Select(r => r.Value);
                 var _validatedFields = new List<ValidatedField>();
 
@@ -93,7 +93,7 @@ namespace Rednet.DataAccess
                     var _prop = _table.BaseType.GetProperties(BindingFlags.Public | BindingFlags.Instance).FirstOrDefault(f => f.Name == _rule.Name);
 #endif
                     if (!_rule.Validate(_prop.GetValue(this)))
-                        _validatedFields.Add(new ValidatedField() { FieldMessage = _rule.ValidationText, FieldName = _rule.Name });
+                        _validatedFields.Add(new ValidatedField() {FieldMessage = _rule.ValidationText, FieldName = _rule.Name});
                 }
 
                 if (_validatedFields.Count > 0)
@@ -109,7 +109,7 @@ namespace Rednet.DataAccess
 #else
             return new Func<bool>(() => false);
 #endif
-                }
+        }
 
         private void SetValidateDataFunction(Func<bool> value)
         {
@@ -119,17 +119,17 @@ namespace Rednet.DataAccess
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-        public event ErrorOnSaveOrDeleteEventHandler ErrorOnSaveOrDelete;
+            public event ErrorOnSaveOrDeleteEventHandler ErrorOnSaveOrDelete;
 
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-        public event ErrorOnValidateDataEventHandler ErrorOnValidateData;
+            public event ErrorOnValidateDataEventHandler ErrorOnValidateData;
 
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-        public event PropertyChangedEventHandler PropertyChanged;
+            public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -164,10 +164,7 @@ namespace Rednet.DataAccess
         [FieldDef(DisplayOnForm = false, DisplayOnGrid = false, IgnoreForSave = true, IsInternal = true)]
         public IEnumerable<FieldDefAttribute> Fields
         {
-            get
-            {
-                return GetFields();
-            }
+            get { return GetFields(); }
         }
 
         [FieldDef(DisplayOnForm = false, DisplayOnGrid = false, IgnoreForSave = true)]
@@ -176,9 +173,9 @@ namespace Rednet.DataAccess
             get
             {
 #if !PCL
-                var _table = TableDefinition.GetTableDefinition(typeof(T));
+                var _table = TableDefinition.GetTableDefinition(typeof (T));
                 var _def = _table.ObjectDefAttribute;
-                var _type = typeof(T);
+                var _type = typeof (T);
                 return _def.PrefixTableNameWithDatabaseName ? string.Format("{0}.{1}", _def.DatabaseName, _type.Name) : _type.Name;
 #else
                 return "";
@@ -187,6 +184,7 @@ namespace Rednet.DataAccess
         }
 
         private static JsonSerializerSettings m_JsonSerializerSettings = null;
+
         public static JsonSerializerSettings GetJsonSerializerSettings()
         {
             return m_JsonSerializerSettings ?? (m_JsonSerializerSettings = new JsonSerializerSettings()
@@ -210,7 +208,7 @@ namespace Rednet.DataAccess
         public string ToJson(bool compressString = false)
         {
             var _ret = JsonConvert.SerializeObject(this, GetJsonSerializerSettings());
-            
+
             if (compressString)
                 _ret = _ret.CompressString();
 
@@ -263,16 +261,16 @@ namespace Rednet.DataAccess
 
             if (compressString)
                 _ret = _ret.CompressString();
-            
+
             return _ret;
         }
 
-        public static async Task<string> ToJsonAsync(List<T> data, bool compressString = false)
+        public static async Task<string> ToJsonAsync(IEnumerable<T> data, bool compressString = false)
         {
             return await Task.Run(() => ToJson(data, compressString));
         }
 
-        public static string ToJson(List<T> data, bool compressString = false)
+        public static string ToJson(IEnumerable<T> data, bool compressString = false)
         {
             var _ret = JsonConvert.SerializeObject(data, GetJsonSerializerSettings());
 
@@ -283,6 +281,11 @@ namespace Rednet.DataAccess
         }
 
 #if !PCL
+        public static async Task<object> FromJsonTypeAsync(Type type, string jsonData, bool decompressString = false)
+        {
+            return await Task.Run(() => FromJsonType(type, jsonData, decompressString));
+        }
+
         public static object FromJsonType(Type type, string jsonData, bool decompressString = false)
         {
             var _object = typeof (DatabaseObject<>).MakeGenericType(type);
@@ -291,9 +294,14 @@ namespace Rednet.DataAccess
 #else
             var _method = _object.GetMethod("FromJson");
 #endif
-            return _method.Invoke(null, new object[] { jsonData, decompressString });
+            return _method.Invoke(null, new object[] {jsonData, decompressString});
         }
 #endif
+
+        public static async Task<T> FromJsonAsync(string jsonData, bool decompressString = false)
+        {
+            return await Task.Run(() => FromJson(jsonData, decompressString));
+        }
 
         public static T FromJson(string jsonData, bool decompressString = false)
         {
@@ -305,19 +313,34 @@ namespace Rednet.DataAccess
             return JsonConvert.DeserializeObject<T>(_data, GetJsonSerializerSettings());
         }
 
-        public static List<T> FromJsonList(string jsonData, bool decompressString = false)
+        public static async Task<IEnumerable<T>> FromJsonListAsync(string jsonData, bool decompressString = false)
+        {
+            return await Task.Run(() => FromJsonList(jsonData, decompressString));
+        }
+
+        public static IEnumerable<T> FromJsonList(string jsonData, bool decompressString = false)
         {
             var _data = jsonData;
 
             if (decompressString)
                 _data = _data.DecompressString();
 
-            return JsonConvert.DeserializeObject<List<T>>(_data, GetJsonSerializerSettings());
+            return JsonConvert.DeserializeObject<IEnumerable<T>>(_data, GetJsonSerializerSettings());
+        }
+
+        public async Task<T> CloneAsync()
+        {
+            return await Task.Run(() => this.Clone());
         }
 
         public T Clone()
         {
             return JsonConvert.DeserializeObject<T>(this.ToJson(), GetJsonSerializerSettings());
+        }
+
+        public async Task<TTarget> CloneToAsync<TTarget>()
+        {
+            return await Task.Run(() => this.CloneTo<TTarget>());
         }
 
         public TTarget CloneTo<TTarget>()
@@ -330,19 +353,19 @@ namespace Rednet.DataAccess
         public string GetScriptInsert()
         {
             var _data = this.ToDictionary();
-            return TableDefinition.GetTableDefinition(typeof(T)).GetScriptInsert(_data);
+            return TableDefinition.GetTableDefinition(typeof (T)).GetScriptInsert(_data);
         }
 
         public string GetScriptUpdate()
         {
             var _data = this.ToDictionary();
-            return TableDefinition.GetTableDefinition(typeof(T)).GetScriptUpdate(_data);
+            return TableDefinition.GetTableDefinition(typeof (T)).GetScriptUpdate(_data);
         }
 
         public string GetScriptDelete()
         {
             var _data = this.ToDictionary();
-            return TableDefinition.GetTableDefinition(typeof(T)).GetScriptDelete(_data);
+            return TableDefinition.GetTableDefinition(typeof (T)).GetScriptDelete(_data);
         }
 
         public virtual void SetIdFields()
@@ -351,32 +374,13 @@ namespace Rednet.DataAccess
 
         string IDatabaseObject.GetCreateTableScript()
         {
-            return TableDefinition.GetTableDefinition(typeof(T)).GetScriptCreateTable();
+            return TableDefinition.GetTableDefinition(typeof (T)).GetScriptCreateTable();
         }
 
         string IDatabaseObject.GetDropTableScript()
         {
-            return TableDefinition.GetTableDefinition(typeof(T)).GetScriptDropTable();
+            return TableDefinition.GetTableDefinition(typeof (T)).GetScriptDropTable();
         }
-
-//#if !PCL
-//        public static IDbConnection GetConnection()
-//        {
-//            try
-//            {
-//                var _ret = TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.GetConnection();
-//                _ret.Open();
-
-//                return _ret;
-
-//            }
-//            catch (Exception ex)
-//            {
-//                throw new Exception(ex.Message, ex);
-//            }
-//        }
-
-//#endif
 
         private void SetSelfColumnsIds(object value)
         {
@@ -395,7 +399,7 @@ namespace Rednet.DataAccess
                     this.SetObjectFieldValue(_field.Name, _prop.GetValue(value));
             }
 #endif
-            }
+        }
 
         private static void ThrowException(CrudReturn status)
         {
@@ -457,7 +461,7 @@ namespace Rednet.DataAccess
         public int Insert(bool ignoreAutoIncrementField = true, bool fireOnAfterSaveData = true, bool validateData = false)
         {
 #if !PCL
-            var _table = TableDefinition.GetTableDefinition(typeof(T));
+            var _table = TableDefinition.GetTableDefinition(typeof (T));
             var _function = _table.DefaultDataFunction;
 
             if (validateData)
@@ -492,7 +496,7 @@ namespace Rednet.DataAccess
         public int Update(bool fireOnAfterSaveData = true, bool validateData = false)
         {
 #if !PCL
-            var _table = TableDefinition.GetTableDefinition(typeof(T));
+            var _table = TableDefinition.GetTableDefinition(typeof (T));
             var _function = _table.DefaultDataFunction;
 
             if (validateData)
@@ -522,7 +526,7 @@ namespace Rednet.DataAccess
         public bool Delete(bool fireBeforeDeleteDataEvent = true, bool fireAfterDeleteDataEvent = true) //, IDbConnection connection = null, bool autoCommit = true)
         {
 #if !PCL
-            var _table = TableDefinition.GetTableDefinition(typeof(T));
+            var _table = TableDefinition.GetTableDefinition(typeof (T));
             var _function = _table.DefaultDataFunction;
 
             if (fireBeforeDeleteDataEvent)
@@ -542,10 +546,15 @@ namespace Rednet.DataAccess
 #endif
         }
 
+        public static async Task<int> DeleteAllAsync(Expression<Func<T, bool>> predicate = null)
+        {
+            return await Task.Run(() => DeleteAll(predicate));
+        }
+
         public static int DeleteAll(Expression<Func<T, bool>> predicate = null)
         {
 #if !PCL
-            var _table = TableDefinition.GetTableDefinition(typeof(T));
+            var _table = TableDefinition.GetTableDefinition(typeof (T));
             var _command = GetDboCommand(predicate, false, SqlStatementsTypes.DeleteAll);
             var _ret = _table.DefaultDataFunction.DeleteAll<T>(_command);
 
@@ -584,6 +593,11 @@ namespace Rednet.DataAccess
 #else
             throw new Exception("Código executado via PCL!");
 #endif
+        }
+
+        public static async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await Task.Run(() => Exists(predicate));
         }
 
         public static bool Exists(Expression<Func<T, bool>> predicate)
@@ -659,7 +673,12 @@ namespace Rednet.DataAccess
 
         }
 
-        public static IEnumerable<T> Query(string sqlStatement, object dynamicParameters = null) 
+        public static async Task<IEnumerable<T>> QueryAsync(string sqlStatement, object dynamicParameters = null)
+        {
+            return await Task.Run(() => Query(sqlStatement, dynamicParameters));
+        }
+
+        public static IEnumerable<T> Query(string sqlStatement, object dynamicParameters = null)
         {
 #if !PCL
             var _function = TableDefinition.GetTableDefinition(typeof (T)).DefaultDataFunction;
@@ -676,6 +695,11 @@ namespace Rednet.DataAccess
 #endif
         }
 
+        public static async Task<IEnumerable<T>> QueryAsync(Expression<Func<T, bool>> predicate = null)
+        {
+            return await Task.Run(() => Query(predicate));
+        }
+
         public static IEnumerable<T> Query(Expression<Func<T, bool>> predicate = null)
         {
 
@@ -689,6 +713,11 @@ namespace Rednet.DataAccess
 #endif
         }
 
+        public async Task<T> ReloadMeAsync()
+        {
+            return await Task.Run(() => this.ReloadMe());
+        }
+
         public T ReloadMe()
         {
 #if !PCL
@@ -700,11 +729,21 @@ namespace Rednet.DataAccess
 #endif
         }
 
+        public static async Task<T> LoadAsync(string sql, object dynamicParameters = null)
+        {
+            return await Task.Run(() => Load(sql, dynamicParameters));
+        }
+
         public static T Load(string sql, object dynamicParameters = null)
         {
             return Query(sql, dynamicParameters).FirstOrDefault();
         }
-        
+
+        public static async Task<T> LoadAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await Task.Run(() => Load(predicate));
+        }
+
         public static T Load(Expression<Func<T, bool>> predicate)
         {
             return Query(predicate).FirstOrDefault();
