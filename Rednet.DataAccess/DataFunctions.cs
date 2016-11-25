@@ -47,6 +47,7 @@ namespace Rednet.DataAccess
         string GetSqlLastIdentity();
         string GetDateTimeFormat();
         string ToJson();
+        Task<string> ToJsonAsync();
         List<DbColumnDef> GetColumnsDef(string tableName);
         void SaveDdlScript<TDatabaseObject>(string path) where TDatabaseObject : IDatabaseObject;
         bool CheckDdlScript<TDatabaseObject>(string path) where TDatabaseObject : IDatabaseObject;
@@ -57,18 +58,31 @@ namespace Rednet.DataAccess
         string PrefixParameter { get; }
 #if !PCL
         TDatabaseObject Load<TDatabaseObject>(DboCommand command);
+        Task<TDatabaseObject> LoadAsync<TDatabaseObject>(DboCommand command);
         TDatabaseObject Load<TDatabaseObject>(string sqlStatement, object dynamicParameters = null);
-        List<TDatabaseObject> Query<TDatabaseObject>(DboCommand command, bool useFieldNames = true);
-        List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, object dynamicParameters = null);
-        List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, string jsonValue = null);
+        Task<TDatabaseObject> LoadAsync<TDatabaseObject>(string sqlStatement, object dynamicParameters = null);
+        IEnumerable<TDatabaseObject> Query<TDatabaseObject>(DboCommand command, bool useFieldNames = true);
+        Task<IEnumerable<TDatabaseObject>> QueryAsync<TDatabaseObject>(DboCommand command, bool useFieldNames = true);
+        IEnumerable<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, object dynamicParameters = null);
+        Task<IEnumerable<TDatabaseObject>> QueryAsync<TDatabaseObject>(string sqlStatement, object dynamicParameters = null);
+        IEnumerable<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, string jsonValue = null);
+        Task<IEnumerable<TDatabaseObject>> QueryAsync<TDatabaseObject>(string sqlStatement, string jsonValue = null);
         TDatabaseObject ReloadMe<TDatabaseObject>(DboCommand command);
+        Task<TDatabaseObject> ReloadMeAsync<TDatabaseObject>(DboCommand command);
         CrudReturn SaveChanges<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> SaveChangesAsync<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject;
         CrudReturn Insert<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> InsertAsync<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject;
         CrudReturn Update<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> UpdateAsync<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject;
         CrudReturn Delete<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> DeleteAsync<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject;
         CrudReturn DeleteAll<TDatabaseObject>(DboCommand command);
+        Task<CrudReturn> DeleteAllAsync<TDatabaseObject>(DboCommand command);
         bool Exists(string sql, object obj);
+        Task<bool> ExistsAsync(string sql, object obj);
         bool Exists(DboCommand command);
+        Task<bool> ExistsAsync(DboCommand command);
 #endif
         CrudReturn ExecuteStatement(string statement, object parameter = null);
         object ExecuteScalar(string sqlStatement, object parameter = null);
@@ -113,9 +127,19 @@ namespace Rednet.DataAccess
         }
 
 #if !PCL
+        public async Task<TDatabaseObject> LoadAsync<TDatabaseObject>(DboCommand command)
+        {
+            return await Task.Run(() => this.Load<TDatabaseObject>(command));
+        }
+
         public TDatabaseObject Load<TDatabaseObject>(DboCommand command)
         {
             return this.Query<TDatabaseObject>(command).FirstOrDefault();
+        }
+
+        public async Task<TDatabaseObject> LoadAsync<TDatabaseObject>(string sqlStatement, object dynamicParameters = null)
+        {
+            return await Task.Run(() => this.Load<TDatabaseObject>(sqlStatement, dynamicParameters));
         }
 
         public TDatabaseObject Load<TDatabaseObject>(string sqlStatement, object dynamicParameters = null)
@@ -124,13 +148,23 @@ namespace Rednet.DataAccess
             return this.Query<TDatabaseObject>(sqlStatement, _parameters).FirstOrDefault();
         }
 
-        public List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, string jsonValue = null)
+        public async Task<IEnumerable<TDatabaseObject>> QueryAsync<TDatabaseObject>(string sqlStatement, string jsonValue = null)
+        {
+            return await Task.Run(() => this.Query<TDatabaseObject>(sqlStatement, jsonValue));
+        }
+
+        public IEnumerable<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, string jsonValue = null)
         {
             var _parameters = jsonValue == null ? null : JObject.Parse(jsonValue);
             return this.Query<TDatabaseObject>(sqlStatement, _parameters);
         }
 
-        public List<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, object dynamicParameters = null)
+        public async Task<IEnumerable<TDatabaseObject>> QueryAsync<TDatabaseObject>(string sqlStatement, object dynamicParameters = null)
+        {
+            return await Task.Run(() => this.Query<TDatabaseObject>(sqlStatement, dynamicParameters));
+        }
+
+        public IEnumerable<TDatabaseObject> Query<TDatabaseObject>(string sqlStatement, object dynamicParameters = null)
         {
             try
             {
@@ -146,7 +180,12 @@ namespace Rednet.DataAccess
             }
         }
 
-        public List<TDatabaseObject> Query<TDatabaseObject>(DboCommand command, bool useFieldNames = true)
+        public async Task<IEnumerable<TDatabaseObject>> QueryAsync<TDatabaseObject>(DboCommand command, bool useFieldNames = true)
+        {
+            return await Task.Run(() => this.Query<TDatabaseObject>(command, useFieldNames));
+        }
+
+        public IEnumerable<TDatabaseObject> Query<TDatabaseObject>(DboCommand command, bool useFieldNames = true)
         {
 
             try
@@ -180,6 +219,11 @@ namespace Rednet.DataAccess
             }
         }
 
+        public async Task<TDatabaseObject> ReloadMeAsync<TDatabaseObject>(DboCommand command)
+        {
+            return await Task.Run(() => this.ReloadMe<TDatabaseObject>(command));
+        }
+
         public TDatabaseObject ReloadMe<TDatabaseObject>(DboCommand command)
         {
             var _rows = GetDataReader(command.GetCommandDefinition());
@@ -187,6 +231,11 @@ namespace Rednet.DataAccess
             var _ret = ReadRowsFromReader<TDatabaseObject>(_rows);
 
             return _ret.FirstOrDefault();
+        }
+
+        public async Task<CrudReturn> SaveChangesAsync<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject
+        {
+            return await Task.Run(() => this.SaveChanges<TDatabaseObject>(objectToSave, ignoreAutoIncrementField, doNotUpdateWhenExists));
         }
 
         public CrudReturn SaveChanges<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject
@@ -255,6 +304,11 @@ namespace Rednet.DataAccess
             return _ret;
         }
 
+        public async Task<CrudReturn> InsertAsync<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject
+        {
+            return await Task.Run(() => this.Insert(objectToInsert, ignoreAutoIncrementField));
+        }
+
         public CrudReturn Insert<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject
         {
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
@@ -306,9 +360,14 @@ namespace Rednet.DataAccess
 
         }
 
+        public async Task<CrudReturn> UpdateAsync<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject
+        {
+            return await Task.Run(() => this.Update<TDatabaseObject>(objectToUpdate));
+        }
+
         public CrudReturn Update<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject
         {
-            
+
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
             var _ret = new CrudReturn
             {
@@ -342,6 +401,11 @@ namespace Rednet.DataAccess
 
             return _ret;
 
+        }
+
+        public async Task<CrudReturn> DeleteAsync<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject
+        {
+            return await Task.Run(() => this.Delete<TDatabaseObject>(objectToDelete));
         }
 
         public CrudReturn Delete<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject
@@ -379,6 +443,11 @@ namespace Rednet.DataAccess
 
         }
 
+        public async Task<CrudReturn> DeleteAllAsync<TDatabaseObject>(DboCommand command)
+        {
+            return await Task.Run(() => this.DeleteAll<TDatabaseObject>(command));
+        }
+
         public CrudReturn DeleteAll<TDatabaseObject>(DboCommand command)
         {
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
@@ -408,6 +477,11 @@ namespace Rednet.DataAccess
 
         }
 
+        public async Task<bool> ExistsAsync(string sql, object obj)
+        {
+            return await Task.Run(() => this.Exists(sql, obj));
+        }
+
         public bool Exists(string sql, object obj)
         {
             using (var _db = this.Connection)
@@ -416,6 +490,11 @@ namespace Rednet.DataAccess
                 _db.Close();
                 return _exists != 0;
             }
+        }
+
+        public async Task<bool> ExistsAsync(DboCommand command)
+        {
+            return await Task.Run(() => this.Exists(command));
         }
 
         public bool Exists(DboCommand command)
@@ -713,9 +792,20 @@ namespace Rednet.DataAccess
             get { return m_Pooling; }
             set { m_Pooling = value; }
         }
+
+        public async Task<string> ToJsonAsync()
+        {
+            return await Task.Run(() => this.ToJson());
+        }
+
         public string ToJson()
         {
             return JsonConvert.SerializeObject(this, new NumberConverter(), new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff" });
+        }
+
+        public static async Task<T> FromJsonAsync(string jsonData)
+        {
+            return await Task.Run(() => FromJson(jsonData));
         }
 
         public static T FromJson(string jsonData)
@@ -876,7 +966,7 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        public static List<TDatabaseObject> BackupData<TDatabaseObject>()
+        public static IEnumerable<TDatabaseObject> BackupData<TDatabaseObject>()
         {
 #if !PCL
             var _name = DatabaseObject<TDatabaseObject>.ObjectName;

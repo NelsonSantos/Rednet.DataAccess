@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 #if !PCL
@@ -201,6 +202,11 @@ namespace Rednet.DataAccess
             });
         }
 
+        public async Task<string> ToJsonAsync(bool compressString = false)
+        {
+            return await Task.Run(() => this.ToJson(compressString));
+        }
+
         public string ToJson(bool compressString = false)
         {
             var _ret = JsonConvert.SerializeObject(this, GetJsonSerializerSettings());
@@ -236,9 +242,19 @@ namespace Rednet.DataAccess
 
         }
 
+        public async Task<Dictionary<string, object>> ToDictionaryAsync()
+        {
+            return await Task.Run(() => this.ToDictionary());
+        }
+
         public Dictionary<string, object> ToDictionary()
         {
             return ToDictionary(this);
+        }
+
+        public static async Task<string> ToJsonAsync(T data, bool compressString = false)
+        {
+            return await Task.Run(() => ToJson(data, compressString));
         }
 
         public static string ToJson(T data, bool compressString = false)
@@ -249,6 +265,11 @@ namespace Rednet.DataAccess
                 _ret = _ret.CompressString();
             
             return _ret;
+        }
+
+        public static async Task<string> ToJsonAsync(List<T> data, bool compressString = false)
+        {
+            return await Task.Run(() => ToJson(data, compressString));
         }
 
         public static string ToJson(List<T> data, bool compressString = false)
@@ -382,6 +403,11 @@ namespace Rednet.DataAccess
                 throw new Exception(status.ReturnMessage);
         }
 
+        public async Task<bool> SaveChangesAsync(bool ignoreAutoIncrementAttribute = true, FireEvent fireEvent = FireEvent.OnBeforeAndAfter, bool doNotUpdateWhenExists = false, bool validateData = false)
+        {
+            return await Task.Run(() => this.SaveChanges(ignoreAutoIncrementAttribute, fireEvent, doNotUpdateWhenExists, validateData));
+        }
+
         /// <summary>
         /// Save current changes on object
         /// </summary>
@@ -423,6 +449,11 @@ namespace Rednet.DataAccess
 #endif
         }
 
+        public async Task<int> InsertAsync(bool ignoreAutoIncrementField = true, bool fireOnAfterSaveData = true, bool validateData = false)
+        {
+            return await Task.Run(() => this.Insert(ignoreAutoIncrementField, fireOnAfterSaveData, validateData));
+        }
+
         public int Insert(bool ignoreAutoIncrementField = true, bool fireOnAfterSaveData = true, bool validateData = false)
         {
 #if !PCL
@@ -453,6 +484,11 @@ namespace Rednet.DataAccess
 #endif
         }
 
+        public async Task<int> UpdateAsync(bool fireOnAfterSaveData = true, bool validateData = false)
+        {
+            return await Task.Run(() => this.Update(fireOnAfterSaveData, validateData));
+        }
+
         public int Update(bool fireOnAfterSaveData = true, bool validateData = false)
         {
 #if !PCL
@@ -476,6 +512,11 @@ namespace Rednet.DataAccess
 #else
             return 0;
 #endif
+        }
+
+        public async Task<bool> DeleteAsync(bool fireBeforeDeleteDataEvent = true, bool fireAfterDeleteDataEvent = true) //, IDbConnection connection = null, bool autoCommit = true)
+        {
+            return await Task.Run(() => this.Delete(fireBeforeDeleteDataEvent, fireAfterDeleteDataEvent));
         }
 
         public bool Delete(bool fireBeforeDeleteDataEvent = true, bool fireAfterDeleteDataEvent = true) //, IDbConnection connection = null, bool autoCommit = true)
@@ -526,6 +567,11 @@ namespace Rednet.DataAccess
             _ret = _function.ExecuteStatement(_table.GetScriptCreateTable());
             ThrowException(_ret);
 #endif
+        }
+
+        public async Task<bool> ExistsAsync()
+        {
+            return await Task.Run(() => this.Exists());
         }
 
         public bool Exists()
@@ -613,7 +659,7 @@ namespace Rednet.DataAccess
 
         }
 
-        public static List<T> Query(string sqlStatement, object dynamicParameters = null) 
+        public static IEnumerable<T> Query(string sqlStatement, object dynamicParameters = null) 
         {
 #if !PCL
             var _function = TableDefinition.GetTableDefinition(typeof (T)).DefaultDataFunction;
@@ -630,7 +676,7 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        public static List<T> Query(Expression<Func<T, bool>> predicate = null)
+        public static IEnumerable<T> Query(Expression<Func<T, bool>> predicate = null)
         {
 
 #if !PCL

@@ -671,10 +671,14 @@ namespace Rednet.DataAccess
                 _ddl.Append(_first ? "" : ", ");
                 _ddl.AppendFormat("     {0} {1}", _field.Name, GetDBType(_field));
 
-                if (_pks.Count() == 1)
+                if (_first)
                 {
-                    if (_field.AutomaticValue == AutomaticValue.AutoIncrement)
-                        _ddl.Append(" primary key autoincrement");
+                    if (_pks.Count() == 1)
+                    {
+                        _ddl.Append(" primary key");
+                        if (_field.AutomaticValue == AutomaticValue.AutoIncrement)
+                            _ddl.Append(" autoincrement");
+                    }
                 }
 
                 if (!_field.IsNullAble)
