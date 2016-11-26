@@ -115,7 +115,7 @@ namespace Rednet.DataAccess
 
                     if (string.IsNullOrEmpty(leftr.ParameterName))
                     {
-                        var _split = ("." + leftr.CommandText).Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+                        var _split = ("." + leftr.CommandText).Split(new char[] {'.'}, StringSplitOptions.RemoveEmptyEntries);
                         var _parameter = _split.Aggregate("", (_current, _s) => _current + _s);
                         //text = "(" + leftr.CommandText + " " + GetOperand(bin) + " " + _prefix + leftr.CommandText.Replace(Name + ".", "") + ")";
                         text = "(" + leftr.CommandText + " " + GetOperand(bin) + " " + prefix + _parameter + ")";
@@ -124,7 +124,16 @@ namespace Rednet.DataAccess
                         text = "(" + leftr.CommandText + " " + GetOperand(bin) + " " + prefix + leftr.ParameterName + ")";
                 }
                 else
+                {
                     text = "(" + leftr.CommandText + " " + GetOperand(bin) + " " + rightr.CommandText + ")";
+                    var _index = queryNames.Count - 1;
+                    while (queryNames.Count != queryValues.Count)
+                    {
+                        queryNames.RemoveAt(_index);
+                        _index--;
+                    }
+
+                }
 
                 return new CompileResult { CommandText = text };
             }
