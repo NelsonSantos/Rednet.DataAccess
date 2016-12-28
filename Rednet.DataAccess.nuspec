@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+    <metadata>
+        <id>Rednet.DataAccess</id>
+        <version>1.0.11</version>
+        <title>Rednet DataAccess</title>
+        <authors>Rednet Software</authors>
+        <owners>Nelson Santos</owners>
+        <projectUrl>https://github.com/NelsonSantos/Rednet.DataAccess</projectUrl>
+        <iconUrl>http://www.rednetsoftware.com.br/avatar_rednet_nuget.png</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <developmentDependency>true</developmentDependency>
+        <description>Rednet.DataAccess is yet another component to work with data that simplifies your use.</description>
+        <releaseNotes>Implemented async functions, Bug fixes</releaseNotes>
+        <dependencies>
+            <group targetFramework="portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10">
+                <dependency id="Newtonsoft.Json" version="9.0.1" />
+            </group>
+            <group targetFramework="MonoAndroid10">
+                <dependency id="Newtonsoft.Json" version="9.0.1" />
+            </group>
+            <group targetFramework="MonoTouch10">
+                <dependency id="Newtonsoft.Json" version="9.0.1" />
+            </group>
+            <group targetFramework="net45">
+                <dependency id="Newtonsoft.Json" version="9.0.1" />
+            </group>
+            <group targetFramework="wp81">
+                <dependency id="Newtonsoft.Json" version="9.0.1" />
+            </group>
+        </dependencies>
+    </metadata>
+   <files>
+      <!--Core-->
+     <file src="Rednet.DataAccess\bin\Rednet.DataAccess.dll" target="lib\portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Rednet.DataAccess.dll" />
+     <file src="Rednet.DataAccess\bin\Rednet.Shared.dll" target="lib\portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Rednet.Shared.dll" />
+     
+     <!--Xamarin.Android-->
+     <file src="Rednet.DataAccess.Droid\bin\Rednet.DataAccess.dll" target="lib\MonoAndroid10\Rednet.DataAccess.dll" />
+     <file src="Rednet.DataAccess.Droid\bin\Rednet.Shared.dll" target="lib\MonoAndroid10\Rednet.Shared.dll" />
+
+     <!--Xamarin.WP81-->
+     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Rednet.DataAccess.dll" target="lib\wp81\Rednet.DataAccess.dll" />
+     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Rednet.Shared.dll" target="lib\wp81\Rednet.Shared.dll" />
+     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Community.CsharpSqlite.SqlLiteClient.dll" target="lib\wp81\Community.CsharpSqlite.SqlLiteClient.dll" />
+     
+     <!--NET45-->
+     <file src="Rednet.DataAccess.NET45\bin\Rednet.DataAccess.dll" target="lib\net45\Rednet.DataAccess.dll" />
+     <file src="Rednet.DataAccess.NET45\bin\Rednet.Shared.dll" target="lib\net45\Rednet.Shared.dll" />
+
+    <!--Xamarin.iOSUnified-->
+     <file src="Rednet.DataAccess.iOS\bin\Rednet.DataAccess.dll" target="lib\Xamarin.iOS10\Rednet.DataAccess.dll" />
+     <file src="Rednet.DataAccess.iOS\bin\Rednet.Shared.dll" target="lib\Xamarin.iOS10\Rednet.Shared.dll" />
+      
+   </files>	
+</package>
