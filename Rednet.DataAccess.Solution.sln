@@ -34,6 +34,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Keys", "Keys", "{632AEF62-A
 		SqlLiteClient.snk = SqlLiteClient.snk
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{75B830ED-8229-4B34-9EEE-42CECD36778C}"
+	ProjectSection(SolutionItems) = preProject
+		Rednet.DataAccess.nuspec = Rednet.DataAccess.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Ad-Hoc|Any CPU = Ad-Hoc|Any CPU

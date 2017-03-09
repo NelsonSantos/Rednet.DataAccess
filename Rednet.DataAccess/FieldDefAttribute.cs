@@ -77,6 +77,8 @@ namespace Rednet.DataAccess
         internal Type DotNetType { get; set; }
         public int Lenght { get; set; }
         public int Precision { get; set; }
+        public string NumberFormat { get; set; } = "";
+        public string ValidChars { get; set; } = "";
         public string GetParameterName(IDataFunctions datafunction)
         {
             return string.Format("{0}{1}", datafunction.PrefixParameter, this.Name);

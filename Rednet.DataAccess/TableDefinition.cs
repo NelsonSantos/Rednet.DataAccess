@@ -218,12 +218,14 @@ namespace Rednet.DataAccess
                                     IgnoreForSave = _dbAtt.IgnoreForSave,
                                     Precision = _dbAtt.Precision,
                                     EditOnForm = _dbAtt.EditOnForm,
-                                    SerializeField = _dbAtt.SerializeField
+                                    SerializeField = _dbAtt.SerializeField,
+                                    NumberFormat = _dbAtt.NumberFormat,
+                                    ValidChars = _dbAtt.ValidChars
                                 });
                             }
                             else
                             {
-                                this.Fields.Add(_p.Name, new FieldDefAttribute {IsPrimaryKey = false, AutomaticValue = AutomaticValue.None, Name = _p.Name, DotNetType = _p.PropertyType, IsNullAble = true, Lenght = 0, EditOnForm = true, SerializeField = false});
+                                this.Fields.Add(_p.Name, new FieldDefAttribute {IsPrimaryKey = false, AutomaticValue = AutomaticValue.None, Name = _p.Name, DotNetType = _p.PropertyType, IsNullAble = true, Lenght = 0, EditOnForm = true, SerializeField = false, ValidChars = "", NumberFormat = ""});
                             }
                         }
 

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
     <metadata>
         <id>Rednet.DataAccess</id>
-        <version>1.0.11</version>
+        <version>1.0.12</version>
         <title>Rednet DataAccess</title>
         <authors>Rednet Software</authors>
         <owners>Nelson Santos</owners>
@@ -11,7 +11,7 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <developmentDependency>true</developmentDependency>
         <description>Rednet.DataAccess is yet another component to work with data that simplifies your use.</description>
-        <releaseNotes>Implemented async functions, Bug fixes</releaseNotes>
+        <releaseNotes>Added some new properties to FieldDefAttribute</releaseNotes>
         <dependencies>
             <group targetFramework="portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10">
                 <dependency id="Newtonsoft.Json" version="9.0.1" />
