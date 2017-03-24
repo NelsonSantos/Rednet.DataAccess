@@ -98,8 +98,7 @@ namespace Rednet.DataAccess
 
                 if (_validatedFields.Count > 0)
                 {
-                    if (this.ErrorOnValidateData != null)
-                        this.ErrorOnValidateData(this, new ErrorOnValidateDataEventArgs(_validatedFields.ToArray()));
+                    this.RaiseErrorOnValidateData(new ErrorOnValidateDataEventArgs(_validatedFields.ToArray()));
 
                     return false;
                 }
@@ -111,7 +110,12 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        private void SetValidateDataFunction(Func<bool> value)
+        protected void RaiseErrorOnValidateData(ErrorOnValidateDataEventArgs args)
+        {
+            this.ErrorOnValidateData?.Invoke(this, args);
+        }
+
+        public void SetValidateDataFunction(Func<bool> value)
         {
             m_ValidateDataFunction = value;
         }
@@ -119,17 +123,17 @@ namespace Rednet.DataAccess
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-            public event ErrorOnSaveOrDeleteEventHandler ErrorOnSaveOrDelete;
+        public event ErrorOnSaveOrDeleteEventHandler ErrorOnSaveOrDelete;
 
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-            public event ErrorOnValidateDataEventHandler ErrorOnValidateData;
+        public event ErrorOnValidateDataEventHandler ErrorOnValidateData;
 
 #if !PCL && !WINDOWS_PHONE_APP
         [field: NonSerialized]
 #endif
-            public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

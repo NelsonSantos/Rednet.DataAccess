@@ -11,12 +11,12 @@ namespace Rednet.DataAccess
             ValidatedFields = validatedFields;
         }
 
-        public ValidatedField[] ValidatedFields { get; internal set; }
+        public ValidatedField[] ValidatedFields { get; }
     }
 
     public class ValidatedField
     {
-        public string FieldName { get; internal set; }
-        public string FieldMessage { get; internal set; }
+        public string FieldName { get; set; }
+        public string FieldMessage { get; set; }
     }
 }
