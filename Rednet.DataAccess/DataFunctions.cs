@@ -556,6 +556,8 @@ namespace Rednet.DataAccess
         }
 #endif
 
+        private static Dictionary<string, Func<object, object>> m_PopulateFuncs = new Dictionary<string, Func<object, object>>(); 
+
         public static TDatabaseObject PopulateData<TDatabaseObject>(IDictionary<string, object> row, IDictionary<string, object> checkList = null, string baseKey = null, string baseName = null) // where TDatabaseObject : IDatabaseObject
         {
 #if !PCL
@@ -604,6 +606,7 @@ namespace Rednet.DataAccess
             foreach (var _member in _members)
             {
                 var _sqlName = _baseName + _member.Name;
+                var _funcName = $"{_name}.{_member.Name}";
 
                 if (_fields.Contains(_member.Name))
                 {
@@ -647,39 +650,85 @@ namespace Rednet.DataAccess
                 else
                 {
                     var _value = row[_sqlName];
-                    // tenta jogar o valor nulo, se recusar significa que é um campo requerido então o registro está nulo
-                    try
+
+                    if (m_PopulateFuncs.ContainsKey(_funcName))
                     {
-                        _acessor[_object, _member.Name] = _value;
-                    }
-                    catch (NullReferenceException nrex)
-                    {
-                        // se o campo a ser definido pertencer aos campos da chave primaria, então definimos como nulo
-                        if (DatabaseObjectShared.PrimaryKeys[_name].Contains(_member.Name))
+                        try
                         {
-                            _object = null;
-                            break;
+                            _acessor[_object, _member.Name] = m_PopulateFuncs[_funcName].Invoke(_value);
+                        }
+                        catch (NullReferenceException nrex)
+                        {
+                            // se o campo a ser definido pertencer aos campos da chave primaria, então definimos como nulo
+                            if (DatabaseObjectShared.PrimaryKeys[_name].Contains(_member.Name))
+                            {
+                                _object = null;
+                                break;
+                            }
                         }
                     }
-                    catch (InvalidCastException icex)
+                    else
                     {
-                        if (Nullable.GetUnderlyingType(_member.Type) != null)
-                            _acessor[_object, _member.Name] = Convert.ChangeType(_value, Nullable.GetUnderlyingType(_member.Type));
-                        else
+                        // tenta jogar o valor nulo, se recusar significa que é um campo requerido então o registro está nulo
+                        try
                         {
-#if WINDOWS_PHONE_APP
-                            if (_member.Type.GetTypeInfo().IsEnum)
-#else
-                            if (_member.Type.IsEnum)
-#endif
-                                _acessor[_object, _member.Name] = Convert.ChangeType(_value, typeof (int));
+                            var _func = new Func<object, object>((value) =>
+                            {
+                                return value;
+                            });
+                            _acessor[_object, _member.Name] = _func.Invoke(_value);
+                            m_PopulateFuncs.Add(_funcName, _func);
+                        }
+                        catch (NullReferenceException nrex)
+                        {
+                            // se o campo a ser definido pertencer aos campos da chave primaria, então definimos como nulo
+                            if (DatabaseObjectShared.PrimaryKeys[_name].Contains(_member.Name))
+                            {
+                                _object = null;
+                                break;
+                            }
+                        }
+                        catch (InvalidCastException icex)
+                        {
+                            if (Nullable.GetUnderlyingType(_member.Type) != null)
+                            {
+                                var _func = new Func<object, object>((value) =>
+                                {
+                                    return Convert.ChangeType(value, Nullable.GetUnderlyingType(_member.Type));
+                                });
+                                _acessor[_object, _member.Name] = _func.Invoke(_value);
+                                m_PopulateFuncs.Add(_funcName, _func);
+                            }
                             else
-                                _acessor[_object, _member.Name] = Convert.ChangeType(_value, _member.Type);
+                            {
+#if WINDOWS_PHONE_APP
+                                if (_member.Type.GetTypeInfo().IsEnum)
+#else
+                                if (_member.Type.IsEnum)
+#endif
+                                {
+                                    var _func = new Func<object, object>((value) =>
+                                    {
+                                        return Convert.ChangeType(value, typeof(int));
+                                    });
+                                    _acessor[_object, _member.Name] = _func.Invoke(_value);
+                                    m_PopulateFuncs.Add(_funcName, _func);
+                                }
+                                else
+                                {
+                                    var _func = new Func<object, object>((value) =>
+                                    {
+                                        return Convert.ChangeType(value, _member.Type);
+                                    });
+                                    _acessor[_object, _member.Name] = _func.Invoke(_value);
+                                    m_PopulateFuncs.Add(_funcName, _func);
+                                }
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception(ex.Message, ex);
+                        catch (Exception ex)
+                        {
+                            throw new Exception(ex.Message, ex);
+                        }
                     }
                 }
             }

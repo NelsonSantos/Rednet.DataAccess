@@ -769,13 +769,14 @@ namespace Rednet.DataAccess
             var _cmdText = selectionList;
 
             var _where = predicate;
-            var _argNames = new List<string>();
-            var _argValues = new List<object>();
+            var _nameAndValues = new Dictionary<string, object>();
+            //var _argNames = new List<string>();
+            //var _argValues = new List<object>();
 
             CompileResult _w = null;
 
             if (_where != null)
-                _w = CompileResult.CompileExpr(_where, _argNames, _argValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, ObjectName);
+                _w = CompileResult.CompileExpr(_where, /*_argNames, _argValues,*/_nameAndValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, ObjectName);
 
             if (_w != null)
             {
@@ -785,12 +786,12 @@ namespace Rednet.DataAccess
                     _cmdText += "\r\nwhere " + _w.CommandText;
             }
 
-            return new DboCommand(ObjectName, _cmdText, _argNames.ToArray(), _argValues.ToArray());
+            return new DboCommand(ObjectName, _cmdText, /*_argNames.ToArray(), _argValues.ToArray()*/_nameAndValues);
         }
 
         private static DboCommand GetCommandSelectReloadMe(string selectionList, object obj)
         {
-            return new DboCommand(ObjectName, selectionList, null, null, obj);
+            return new DboCommand(ObjectName, selectionList, /*null, null,*/null, obj);
         }
 
         private static DboCommand GetCommandDelete(Expression predicate)
@@ -798,18 +799,19 @@ namespace Rednet.DataAccess
             var _cmdText = "delete from " + ObjectName + " ";
 
             var _where = predicate;
-            var _argNames = new List<string>();
-            var _argValues = new List<object>();
+            var _namesAndValues = new Dictionary<string, object>();
+            //var _argNames = new List<string>();
+            //var _argValues = new List<object>();
 
             CompileResult _w = null;
 
             if (_where != null)
-                _w = CompileResult.CompileExpr(_where, _argNames, _argValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, ObjectName);
+                _w = CompileResult.CompileExpr(_where, /*_argNames, _argValues,*/_namesAndValues, TableDefinition.GetTableDefinition(typeof(T)).DefaultDataFunction.PrefixParameter, ObjectName);
 
             if (_w != null)
                 _cmdText += " where " + _w.CommandText;
 
-            return new DboCommand(ObjectName, _cmdText, _argNames.ToArray(), _argValues.ToArray());
+            return new DboCommand(ObjectName, _cmdText, /*_argNames.ToArray(), _argValues.ToArray()*/_namesAndValues);
         }
 
 #endregion
@@ -818,9 +820,10 @@ namespace Rednet.DataAccess
     public interface IDboCommand
     {
         string SqlStatement { get; set; }
-        string[] FieldNames { get; set; }
-        object[] FieldValues { get; set; }
+        //string[] FieldNames { get; set; }
+        //object[] FieldValues { get; set; }
         object Obj { get; set; }
+        Dictionary<string, object> NamesAndValues { get; }
     }
 
 #if !PCL && !WINDOWS_PHONE_APP
@@ -830,18 +833,20 @@ namespace Rednet.DataAccess
     {
         private string m_ObjectName;
         private string m_SqlStatement;
-        private string[] m_FieldNames;
-        private object[] m_FieldValues;
+        //private string[] m_FieldNames;
+        //private object[] m_FieldValues;
         private object m_Obj;
 
-        public DboCommand(string objectName, string sqlStatement, string[] fieldNames, object[] fieldValues, object obj = null)
+        public DboCommand(string objectName, string sqlStatement, /*string[] fieldNames, object[] fieldValues,*/Dictionary<string, object> namesAndValues, object obj = null)
         {
             m_ObjectName = objectName;
             m_SqlStatement = sqlStatement;
-            m_FieldNames = fieldNames;
-            m_FieldValues = fieldValues;
+            //m_FieldNames = fieldNames;
+            //m_FieldValues = fieldValues;
             m_Obj = obj;
+            this.NamesAndValues = namesAndValues;
         }
+        public Dictionary<string, object> NamesAndValues { get; }
 
         public string SqlStatement
         {
@@ -849,17 +854,17 @@ namespace Rednet.DataAccess
             set { m_SqlStatement = value; }
         }
 
-        public string[] FieldNames
-        {
-            get { return m_FieldNames; }
-            set { m_FieldNames = value; }
-        }
+        //public string[] FieldNames
+        //{
+        //    get { return m_FieldNames; }
+        //    set { m_FieldNames = value; }
+        //}
 
-        public object[] FieldValues
-        {
-            get { return m_FieldValues; }
-            set { m_FieldValues = value; }
-        }
+        //public object[] FieldValues
+        //{
+        //    get { return m_FieldValues; }
+        //    set { m_FieldValues = value; }
+        //}
 
         public object Obj
         {
@@ -876,14 +881,25 @@ namespace Rednet.DataAccess
 
         private DynamicParameters GetDynamicParameters()
         {
-            if (FieldNames.Length == 0) return null;
+            if (this.NamesAndValues == null) return null;
+            if (this.NamesAndValues.Count == 0) return null;
 
             var _parameters = new DynamicParameters();
-            for (int _index = 0; _index < FieldNames.Length; _index++)
+            foreach (var _name in this.NamesAndValues)
             {
-                _parameters.Add(FieldNames[_index].Replace(m_ObjectName + ".", ""), FieldValues[_index]);
+                _parameters.Add(_name.Key.Replace(m_ObjectName + ".", ""), _name.Value);
             }
             return _parameters;
+
+            //if (FieldNames.Length == 0) return null;
+
+            //var _parameters = new DynamicParameters();
+            //for (int _index = 0; _index < FieldNames.Length; _index++)
+            //{
+            //    if (_index <= (FieldValues.Length - 1))
+            //        _parameters.Add(FieldNames[_index].Replace(m_ObjectName + ".", ""), FieldValues[_index]);
+            //}
+            //return _parameters;
         }
 #endif
     }
