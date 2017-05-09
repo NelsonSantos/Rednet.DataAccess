@@ -1,17 +1,5 @@
 namespace Rednet.DataAccess
 {
-    public enum SqlStatementsTypes
-    {
-        None,
-        Select,
-        SelectCheck,
-        SelectReload,
-        Insert,
-        Update,
-        Delete,
-        DeleteAll,
-        UnknownStatement
-    }
 
     public class SqlStatements
     {

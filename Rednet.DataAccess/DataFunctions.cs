@@ -69,16 +69,16 @@ namespace Rednet.DataAccess
         Task<IEnumerable<TDatabaseObject>> QueryAsync<TDatabaseObject>(string sqlStatement, string jsonValue = null);
         TDatabaseObject ReloadMe<TDatabaseObject>(DboCommand command);
         Task<TDatabaseObject> ReloadMeAsync<TDatabaseObject>(DboCommand command);
-        CrudReturn SaveChanges<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject;
-        Task<CrudReturn> SaveChangesAsync<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject;
-        CrudReturn Insert<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject;
-        Task<CrudReturn> InsertAsync<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject;
-        CrudReturn Update<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject;
-        Task<CrudReturn> UpdateAsync<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject;
-        CrudReturn Delete<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject;
-        Task<CrudReturn> DeleteAsync<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject;
-        CrudReturn DeleteAll<TDatabaseObject>(DboCommand command);
-        Task<CrudReturn> DeleteAllAsync<TDatabaseObject>(DboCommand command);
+        CrudReturn SaveChanges<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> SaveChangesAsync<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        CrudReturn Insert<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> InsertAsync<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        CrudReturn Update<TDatabaseObject>(TDatabaseObject objectToUpdate, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> UpdateAsync<TDatabaseObject>(TDatabaseObject objectToUpdate, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        CrudReturn Delete<TDatabaseObject>(TDatabaseObject objectToDelete, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        Task<CrudReturn> DeleteAsync<TDatabaseObject>(TDatabaseObject objectToDelete, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject;
+        CrudReturn DeleteAll<TDatabaseObject>(DboCommand command, TransactionObject transaction = null);
+        Task<CrudReturn> DeleteAllAsync<TDatabaseObject>(DboCommand command, TransactionObject transaction = null);
         bool Exists(string sql, object obj);
         Task<bool> ExistsAsync(string sql, object obj);
         bool Exists(DboCommand command);
@@ -236,12 +236,12 @@ namespace Rednet.DataAccess
             return _ret.FirstOrDefault();
         }
 
-        public async Task<CrudReturn> SaveChangesAsync<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject
+        public async Task<CrudReturn> SaveChangesAsync<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
-            return await Task.Run(() => this.SaveChanges<TDatabaseObject>(objectToSave, ignoreAutoIncrementField, doNotUpdateWhenExists));
+            return await Task.Run(() => this.SaveChanges<TDatabaseObject>(objectToSave, ignoreAutoIncrementField, doNotUpdateWhenExists, transaction));
         }
 
-        public CrudReturn SaveChanges<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false) where TDatabaseObject : IDatabaseObject
+        public CrudReturn SaveChanges<TDatabaseObject>(TDatabaseObject objectToSave, bool ignoreAutoIncrementField = true, bool doNotUpdateWhenExists = false, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
 
@@ -253,50 +253,57 @@ namespace Rednet.DataAccess
                 ReturnMessage = "Dados atualizados com sucesso!"
             };
 
+            var _transaction = transaction ?? new TransactionObject(true);
+
             try
             {
 
-                using (var _connection = _table.DefaultDataFunction.Connection)
+                if (_transaction.Connection == null)
                 {
+                    _transaction.SetConnection(_table.DefaultDataFunction.Connection);
+                }
 
-                    var _sql = "";
-                    var _backEndField = _table.Fields.Select(f => f.Value).FirstOrDefault(f => f.AutomaticValue != AutomaticValue.None);
-                    var _data = objectToSave.ToDictionary();
+                var _sql = "";
+                var _backEndField = _table.Fields.Select(f => f.Value).FirstOrDefault(f => f.AutomaticValue != AutomaticValue.None);
+                var _data = objectToSave.ToDictionary();
 
-                    var _exists = _connection.ExecuteScalar<long>(_table.GetSqlSelectForCheck(), _data);
+                var _exists = _transaction.Connection.ExecuteScalar<long>(_table.GetSqlSelectForCheck(), _data);
 
-                    if (_exists == 0)
+                if (_exists == 0)
+                {
+                    _ret.ChangeType = SqlStatementsTypes.Insert;
+                    if (_backEndField != null)
                     {
-                        _ret.ChangeType = SqlStatementsTypes.Insert;
-                        if (_backEndField != null)
-                        {
-                            _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
-                            int _lastId = this.DoInsert(_table, _connection, _sql, _data);
-                            objectToSave.SetObjectFieldValue(_backEndField.Name, _lastId);
-                            _ret.RecordsAffected = 1;
-                        }
-                        else
-                        {
-                            objectToSave.SetIdFields();
-                            _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
-                            _ret.RecordsAffected = _connection.Execute(_sql, _data);
-                        }
+                        _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
+                        int _lastId = this.DoInsert(_table, _transaction.Connection, _sql, _data);
+                        objectToSave.SetObjectFieldValue(_backEndField.Name, _lastId);
+                        _ret.RecordsAffected = 1;
                     }
                     else
                     {
-                        if (!doNotUpdateWhenExists)
-                        {
-                            _ret.ChangeType = SqlStatementsTypes.Update;
-                            _sql = _table.GetSqlUpdate();
-                            _ret.RecordsAffected = _connection.Execute(_sql, _data);
-                        }
+                        objectToSave.SetIdFields();
+                        _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
+                        _ret.RecordsAffected = _transaction.Connection.Execute(_sql, _data);
                     }
-
-                    _ret.ReturnData = objectToSave;
-
-                    _connection.Close();
-
                 }
+                else
+                {
+                    if (!doNotUpdateWhenExists)
+                    {
+                        _ret.ChangeType = SqlStatementsTypes.Update;
+                        _sql = _table.GetSqlUpdate();
+                        _ret.RecordsAffected = _transaction.Connection.Execute(_sql, _data);
+                    }
+                }
+
+                _ret.ReturnData = objectToSave;
+
+                if (_transaction.AutoCommit)
+                {
+                    _transaction.Commit();
+                    _transaction.Dispose();
+                }
+
             }
             catch (Exception ex)
             {
@@ -307,12 +314,12 @@ namespace Rednet.DataAccess
             return _ret;
         }
 
-        public async Task<CrudReturn> InsertAsync<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject
+        public async Task<CrudReturn> InsertAsync<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
-            return await Task.Run(() => this.Insert(objectToInsert, ignoreAutoIncrementField));
+            return await Task.Run(() => this.Insert(objectToInsert, ignoreAutoIncrementField, transaction));
         }
 
-        public CrudReturn Insert<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true) where TDatabaseObject : IDatabaseObject
+        public CrudReturn Insert<TDatabaseObject>(TDatabaseObject objectToInsert, bool ignoreAutoIncrementField = true, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
 
@@ -324,33 +331,39 @@ namespace Rednet.DataAccess
                 ReturnMessage = "Dados atualizados com sucesso!"
             };
 
+            var _transaction = transaction ?? new TransactionObject(true);
+
             try
             {
-                using (var _connection = _table.DefaultDataFunction.Connection)
+                if (_transaction.Connection == null)
                 {
+                    _transaction.SetConnection(_table.DefaultDataFunction.Connection);
+                }
 
-                    var _sql = "";
-                    var _data = objectToInsert.ToDictionary();
-                    var _backEndField = _table.Fields.Select(f => f.Value).FirstOrDefault(f => f.AutomaticValue != AutomaticValue.None);
+                var _sql = "";
+                var _data = objectToInsert.ToDictionary();
+                var _backEndField = _table.Fields.Select(f => f.Value).FirstOrDefault(f => f.AutomaticValue != AutomaticValue.None);
 
-                    if (_backEndField != null)
-                    {
-                        _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
-                        int _lastId = this.DoInsert(_table, _connection, _sql, _data);
-                        objectToInsert.SetObjectFieldValue(_backEndField.Name, _lastId);
-                        _ret.RecordsAffected = 1;
-                    }
-                    else
-                    {
-                        objectToInsert.SetIdFields();
-                        _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
-                        _ret.RecordsAffected = _connection.Execute(_sql, _data);
-                    }
+                if (_backEndField != null)
+                {
+                    _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
+                    int _lastId = this.DoInsert(_table, _transaction.Connection, _sql, _data);
+                    objectToInsert.SetObjectFieldValue(_backEndField.Name, _lastId);
+                    _ret.RecordsAffected = 1;
+                }
+                else
+                {
+                    objectToInsert.SetIdFields();
+                    _sql = _table.GetSqlInsert(ignoreAutoIncrementField);
+                    _ret.RecordsAffected = _transaction.Connection.Execute(_sql, _data);
+                }
 
-                    _ret.ReturnData = objectToInsert;
+                _ret.ReturnData = objectToInsert;
 
-                    _connection.Close();
-
+                if (_transaction.AutoCommit)
+                {
+                    _transaction.Commit();
+                    _transaction.Dispose();
                 }
             }
             catch (Exception ex)
@@ -363,12 +376,12 @@ namespace Rednet.DataAccess
 
         }
 
-        public async Task<CrudReturn> UpdateAsync<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject
+        public async Task<CrudReturn> UpdateAsync<TDatabaseObject>(TDatabaseObject objectToUpdate, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
-            return await Task.Run(() => this.Update<TDatabaseObject>(objectToUpdate));
+            return await Task.Run(() => this.Update<TDatabaseObject>(objectToUpdate, transaction));
         }
 
-        public CrudReturn Update<TDatabaseObject>(TDatabaseObject objectToUpdate) where TDatabaseObject : IDatabaseObject
+        public CrudReturn Update<TDatabaseObject>(TDatabaseObject objectToUpdate, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
 
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
@@ -380,20 +393,26 @@ namespace Rednet.DataAccess
                 ReturnMessage = "Dados atualizados com sucesso!"
             };
 
+            var _transaction = transaction ?? new TransactionObject(true);
+
             try
             {
-
-                using (var _connection = _table.DefaultDataFunction.Connection)
+                if (_transaction.Connection == null)
                 {
-                    var _sql = "";
-                    var _data = objectToUpdate.ToDictionary();
+                    _transaction.SetConnection(_table.DefaultDataFunction.Connection);
+                }
 
-                    _sql = _table.GetSqlUpdate();
-                    _ret.RecordsAffected = _connection.Execute(_sql, _data);
-                    _ret.ReturnData = objectToUpdate;
+                var _sql = "";
+                var _data = objectToUpdate.ToDictionary();
 
-                    _connection.Close();
+                _sql = _table.GetSqlUpdate();
+                _ret.RecordsAffected = _transaction.Connection.Execute(_sql, _data);
+                _ret.ReturnData = objectToUpdate;
 
+                if (_transaction.AutoCommit)
+                {
+                    _transaction.Commit();
+                    _transaction.Dispose();
                 }
             }
             catch (Exception ex)
@@ -406,12 +425,12 @@ namespace Rednet.DataAccess
 
         }
 
-        public async Task<CrudReturn> DeleteAsync<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject
+        public async Task<CrudReturn> DeleteAsync<TDatabaseObject>(TDatabaseObject objectToDelete, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
-            return await Task.Run(() => this.Delete<TDatabaseObject>(objectToDelete));
+            return await Task.Run(() => this.Delete<TDatabaseObject>(objectToDelete, transaction));
         }
 
-        public CrudReturn Delete<TDatabaseObject>(TDatabaseObject objectToDelete) where TDatabaseObject : IDatabaseObject
+        public CrudReturn Delete<TDatabaseObject>(TDatabaseObject objectToDelete, TransactionObject transaction = null) where TDatabaseObject : IDatabaseObject
         {
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
             var _ret = new CrudReturn
@@ -422,19 +441,27 @@ namespace Rednet.DataAccess
                 ReturnMessage = "Dados excluídos com sucesso!"
             };
 
+            var _transaction = transaction ?? new TransactionObject(true);
+
             try
             {
 
-                using (var _connection = _table.DefaultDataFunction.Connection)
+                if (_transaction.Connection == null)
                 {
-
-                    var _sql = _table.GetSqlDelete();
-
-                    _ret.RecordsAffected = _connection.Execute(_sql, objectToDelete);
-
-                    _connection.Close();
-
+                    _transaction.SetConnection(_table.DefaultDataFunction.Connection);
                 }
+
+                var _sql = _table.GetSqlDelete();
+
+                _ret.RecordsAffected = _transaction.Connection.Execute(_sql, objectToDelete);
+
+                if (_transaction.AutoCommit)
+                {
+                    _transaction.Commit();
+                    _transaction.Dispose();
+                }
+
+
             }
             catch (Exception ex)
             {
@@ -446,12 +473,12 @@ namespace Rednet.DataAccess
 
         }
 
-        public async Task<CrudReturn> DeleteAllAsync<TDatabaseObject>(DboCommand command)
+        public async Task<CrudReturn> DeleteAllAsync<TDatabaseObject>(DboCommand command, TransactionObject transaction = null)
         {
-            return await Task.Run(() => this.DeleteAll<TDatabaseObject>(command));
+            return await Task.Run(() => this.DeleteAll<TDatabaseObject>(command, transaction));
         }
 
-        public CrudReturn DeleteAll<TDatabaseObject>(DboCommand command)
+        public CrudReturn DeleteAll<TDatabaseObject>(DboCommand command, TransactionObject transaction = null)
         {
             var _table = TableDefinition.GetTableDefinition(typeof(TDatabaseObject));
             var _ret = new CrudReturn
@@ -462,12 +489,21 @@ namespace Rednet.DataAccess
                 ReturnMessage = "Dados excluídos com sucesso!"
             };
 
+            var _transaction = transaction ?? new TransactionObject(true);
+
             try
             {
-                using (var _connection = _table.DefaultDataFunction.Connection)
+                if (_transaction.Connection == null)
                 {
-                    _ret.RecordsAffected = _connection.Execute(command.GetCommandDefinition());
-                    _connection.Close();
+                    _transaction.SetConnection(_table.DefaultDataFunction.Connection);
+                }
+
+                _ret.RecordsAffected = _transaction.Connection.Execute(command.GetCommandDefinition());
+
+                if (_transaction.AutoCommit)
+                {
+                    _transaction.Commit();
+                    _transaction.Dispose();
                 }
             }
             catch (Exception ex)
@@ -533,11 +569,13 @@ namespace Rednet.DataAccess
         {
             var _ret = new List<TDatabaseObject>();
             var _checkList = new Dictionary<string, object>();
+            var _countRow = 0;
 
             using (reader)
             {
                 while (reader.Read())
                 {
+                    _countRow++;
                     var _row = new Dictionary<string, object>();
                     for (var _i = 0; _i < reader.FieldCount; _i++)
                     {
@@ -694,7 +732,8 @@ namespace Rednet.DataAccess
                             {
                                 var _func = new Func<object, object>((value) =>
                                 {
-                                    return Convert.ChangeType(value, Nullable.GetUnderlyingType(_member.Type));
+                                    var _funcRet = value == null ? null : Convert.ChangeType(value, Nullable.GetUnderlyingType(_member.Type));
+                                    return _funcRet;
                                 });
                                 _acessor[_object, _member.Name] = _func.Invoke(_value);
                                 m_PopulateFuncs.Add(_funcName, _func);

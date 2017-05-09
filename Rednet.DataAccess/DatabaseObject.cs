@@ -411,9 +411,9 @@ namespace Rednet.DataAccess
                 throw new Exception(status.ReturnMessage);
         }
 
-        public async Task<bool> SaveChangesAsync(bool ignoreAutoIncrementAttribute = true, FireEvent fireEvent = FireEvent.OnBeforeAndAfter, bool doNotUpdateWhenExists = false, bool validateData = false)
+        public async Task<bool> SaveChangesAsync(bool ignoreAutoIncrementAttribute = true, FireEvent fireEvent = FireEvent.OnBeforeAndAfter, bool doNotUpdateWhenExists = false, bool validateData = false, TransactionObject transaction = null)
         {
-            return await Task.Run(() => this.SaveChanges(ignoreAutoIncrementAttribute, fireEvent, doNotUpdateWhenExists, validateData));
+            return await Task.Run(() => this.SaveChanges(ignoreAutoIncrementAttribute, fireEvent, doNotUpdateWhenExists, validateData, transaction));
         }
 
         /// <summary>
@@ -424,7 +424,7 @@ namespace Rednet.DataAccess
         /// <param name="doNotUpdateWhenExists">if true, doesn't fire the update statement when a register already exists in the database. Defaults to false</param>
         /// <param name="validateData"></param>
         /// <returns>true if object is saved on database, otherwise false</returns>
-        public bool SaveChanges(bool ignoreAutoIncrementAttribute = true, FireEvent fireEvent = FireEvent.OnBeforeAndAfter, bool doNotUpdateWhenExists = false, bool validateData = false)
+        public bool SaveChanges(bool ignoreAutoIncrementAttribute = true, FireEvent fireEvent = FireEvent.OnBeforeAndAfter, bool doNotUpdateWhenExists = false, bool validateData = false, TransactionObject transaction = null)
         {
 #if !PCL
             var _table = TableDefinition.GetTableDefinition(typeof (T));
@@ -436,9 +436,9 @@ namespace Rednet.DataAccess
             }
 
             if (fireEvent == FireEvent.OnBeforeAndAfter || fireEvent == FireEvent.OnBeforeSave)
-                this.OnBeforeSaveData(new NotifyRecordChangesEventArgs(0, SqlStatementsTypes.UnknownStatement));
+                this.OnBeforeSaveData(new NotifyRecordChangesEventArgs(0, SqlStatementsTypes.UnknownStatement, transaction));
 
-            var _ret = _function.SaveChanges(this, ignoreAutoIncrementAttribute, doNotUpdateWhenExists);
+            var _ret = _function.SaveChanges(this, ignoreAutoIncrementAttribute, doNotUpdateWhenExists, transaction);
 
             ThrowException(_ret);
 
@@ -448,7 +448,7 @@ namespace Rednet.DataAccess
             }
 
             if (fireEvent == FireEvent.OnBeforeAndAfter || fireEvent == FireEvent.OnAfterSave)
-                this.OnAfterSaveData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType));
+                this.OnAfterSaveData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType, transaction));
 
             return _ret.ReturnStatus == CrudStatus.Ok;
 
@@ -457,12 +457,12 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        public async Task<int> InsertAsync(bool ignoreAutoIncrementField = true, bool fireOnAfterSaveData = true, bool validateData = false)
+        public async Task<int> InsertAsync(bool ignoreAutoIncrementField = true, bool fireOnAfterSaveData = true, bool validateData = false, TransactionObject transaction = null)
         {
-            return await Task.Run(() => this.Insert(ignoreAutoIncrementField, fireOnAfterSaveData, validateData));
+            return await Task.Run(() => this.Insert(ignoreAutoIncrementField, fireOnAfterSaveData, validateData, transaction));
         }
 
-        public int Insert(bool ignoreAutoIncrementField = true, bool fireOnAfterSaveData = true, bool validateData = false)
+        public int Insert(bool ignoreAutoIncrementField = true, bool fireOnAfterSaveData = true, bool validateData = false, TransactionObject transaction = null)
         {
 #if !PCL
             var _table = TableDefinition.GetTableDefinition(typeof (T));
@@ -473,7 +473,7 @@ namespace Rednet.DataAccess
                 if (!this.OnValidateData()) return 0;
             }
 
-            var _ret = _function.Insert(this, ignoreAutoIncrementField);
+            var _ret = _function.Insert(this, ignoreAutoIncrementField, transaction);
 
             ThrowException(_ret);
 
@@ -483,7 +483,7 @@ namespace Rednet.DataAccess
             }
 
             if (fireOnAfterSaveData)
-                this.OnAfterSaveData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType));
+                this.OnAfterSaveData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType, transaction));
 
             return _ret.RecordsAffected;
 
@@ -492,12 +492,12 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        public async Task<int> UpdateAsync(bool fireOnAfterSaveData = true, bool validateData = false)
+        public async Task<int> UpdateAsync(bool fireOnAfterSaveData = true, bool validateData = false, TransactionObject transaction = null)
         {
-            return await Task.Run(() => this.Update(fireOnAfterSaveData, validateData));
+            return await Task.Run(() => this.Update(fireOnAfterSaveData, validateData, transaction));
         }
 
-        public int Update(bool fireOnAfterSaveData = true, bool validateData = false)
+        public int Update(bool fireOnAfterSaveData = true, bool validateData = false, TransactionObject transaction = null)
         {
 #if !PCL
             var _table = TableDefinition.GetTableDefinition(typeof (T));
@@ -508,12 +508,12 @@ namespace Rednet.DataAccess
                 if (!this.OnValidateData()) return 0;
             }
 
-            var _ret = _function.Update(this);
+            var _ret = _function.Update(this, transaction);
 
             ThrowException(_ret);
 
             if (fireOnAfterSaveData)
-                this.OnAfterSaveData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType));
+                this.OnAfterSaveData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType, transaction));
 
             return _ret.RecordsAffected;
 
@@ -522,26 +522,26 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        public async Task<bool> DeleteAsync(bool fireBeforeDeleteDataEvent = true, bool fireAfterDeleteDataEvent = true) //, IDbConnection connection = null, bool autoCommit = true)
+        public async Task<bool> DeleteAsync(bool fireBeforeDeleteDataEvent = true, bool fireAfterDeleteDataEvent = true, TransactionObject transaction = null)
         {
-            return await Task.Run(() => this.Delete(fireBeforeDeleteDataEvent, fireAfterDeleteDataEvent));
+            return await Task.Run(() => this.Delete(fireBeforeDeleteDataEvent, fireAfterDeleteDataEvent, transaction));
         }
 
-        public bool Delete(bool fireBeforeDeleteDataEvent = true, bool fireAfterDeleteDataEvent = true) //, IDbConnection connection = null, bool autoCommit = true)
+        public bool Delete(bool fireBeforeDeleteDataEvent = true, bool fireAfterDeleteDataEvent = true, TransactionObject transaction = null)
         {
 #if !PCL
             var _table = TableDefinition.GetTableDefinition(typeof (T));
             var _function = _table.DefaultDataFunction;
 
             if (fireBeforeDeleteDataEvent)
-                this.OnBeforeDeleteData(new NotifyRecordChangesEventArgs(0, SqlStatementsTypes.Delete));
+                this.OnBeforeDeleteData(new NotifyRecordChangesEventArgs(0, SqlStatementsTypes.Delete, transaction));
 
-            var _ret = _function.Delete(this);
+            var _ret = _function.Delete(this, transaction);
 
             ThrowException(_ret);
 
             if (fireAfterDeleteDataEvent)
-                this.OnAfterDeleteData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType));
+                this.OnAfterDeleteData(new NotifyRecordChangesEventArgs(_ret.RecordsAffected, _ret.ChangeType, transaction));
 
             return _ret.RecordsAffected > 0;
 
@@ -550,17 +550,17 @@ namespace Rednet.DataAccess
 #endif
         }
 
-        public static async Task<int> DeleteAllAsync(Expression<Func<T, bool>> predicate = null)
+        public static async Task<int> DeleteAllAsync(Expression<Func<T, bool>> predicate = null, TransactionObject transaction = null)
         {
-            return await Task.Run(() => DeleteAll(predicate));
+            return await Task.Run(() => DeleteAll(predicate, transaction));
         }
 
-        public static int DeleteAll(Expression<Func<T, bool>> predicate = null)
+        public static int DeleteAll(Expression<Func<T, bool>> predicate = null, TransactionObject transaction = null)
         {
 #if !PCL
             var _table = TableDefinition.GetTableDefinition(typeof (T));
             var _command = GetDboCommand(predicate, false, SqlStatementsTypes.DeleteAll);
-            var _ret = _table.DefaultDataFunction.DeleteAll<T>(_command);
+            var _ret = _table.DefaultDataFunction.DeleteAll<T>(_command, transaction);
 
             return _ret.RecordsAffected;
 #else

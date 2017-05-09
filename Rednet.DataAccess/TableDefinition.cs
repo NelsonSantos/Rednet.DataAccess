@@ -15,8 +15,6 @@ namespace Rednet.DataAccess
         private IDataFunctions m_DefaultDataFunctions = null;
         private ObjectDefAttribute m_ObjectDefAttribute = null;
 
-        //private string m_PrefixParameter = "";
-
         private static int m_CountTables = 0;
         private static readonly Dictionary<string, TableDefinition> TableDefinitions = new Dictionary<string, TableDefinition>();
         private string m_StatementSelect = string.Empty;

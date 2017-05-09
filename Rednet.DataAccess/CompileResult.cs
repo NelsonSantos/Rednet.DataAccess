@@ -96,7 +96,7 @@ namespace Rednet.DataAccess
                 throw new NotSupportedException("Cannot get SQL for: " + n);
             }
         }
-        public static CompileResult CompileExpr(Expression expr, Dictionary<string, object> namesAndValues,  /*List<string> queryNames, List<object> queryValues,*/ string prefix, string name, bool isLeft = false)
+        public static CompileResult CompileExpr(Expression expr, Dictionary<string, object> namesAndValues, string prefix, string name, bool isLeft = false)
         {
             if (expr == null)
             {
@@ -104,14 +104,14 @@ namespace Rednet.DataAccess
             }
             else if (expr is LambdaExpression)
             {
-                return CompileExpr((expr as LambdaExpression).Body, /*queryNames, queryValues,*/namesAndValues, prefix, name, isLeft);
+                return CompileExpr((expr as LambdaExpression).Body, namesAndValues, prefix, name, isLeft);
             }
             else if (expr is BinaryExpression)
             {
                 var bin = (BinaryExpression)expr;
 
-                var leftr = CompileExpr(bin.Left, /*queryNames, queryValues,*/namesAndValues, prefix, name, true);
-                var rightr = CompileExpr(bin.Right, /*queryNames, queryValues,*/namesAndValues, prefix, name, false);
+                var leftr = CompileExpr(bin.Left, namesAndValues, prefix, name, true);
+                var rightr = CompileExpr(bin.Right, namesAndValues, prefix, name, false);
 
                 //If either side is a parameter and is null, then handle the other side specially (for "is null"/"is not null")
                 string text;
@@ -126,7 +126,7 @@ namespace Rednet.DataAccess
                     {
                         var _split = ("." + leftr.CommandText).Split(new char[] {'.'}, StringSplitOptions.RemoveEmptyEntries);
                         var _parameter = GetNewParameter(_split.Aggregate("", (_current, _s) => _current + _s));
-                        //text = "(" + leftr.CommandText + " " + GetOperand(bin) + " " + _prefix + leftr.CommandText.Replace(Name + ".", "") + ")";
+
                         text = "(" + leftr.CommandText + " " + GetOperand(bin) + " " + prefix + _parameter + ")";
 
                         namesAndValues.Add(_parameter, rightr.Value);
@@ -137,13 +137,6 @@ namespace Rednet.DataAccess
                 else
                 {
                     text = "(" + leftr.CommandText + " " + GetOperand(bin) + " " + rightr.CommandText + ")";
-                    //var _index = queryNames.Count - 1;
-                    //while (queryNames.Count != queryValues.Count)
-                    //{
-                    //    queryNames.RemoveAt(_index);
-                    //    _index--;
-                    //}
-
                 }
 
                 return new CompileResult { CommandText = text };
@@ -153,16 +146,16 @@ namespace Rednet.DataAccess
 
                 var call = (MethodCallExpression)expr;
                 var args = new CompileResult[call.Arguments.Count];
-                var obj = call.Object != null ? CompileExpr(call.Object, /*queryNames, queryValues,*/namesAndValues, prefix, name, isLeft) : null;
+                var obj = call.Object != null ? CompileExpr(call.Object, namesAndValues, prefix, name, isLeft) : null;
 
                 for (var i = 0; i < args.Length; i++)
                 {
-                    args[i] = CompileExpr(call.Arguments[i], /*queryNames, queryValues,*/namesAndValues, prefix, name, isLeft);
+                    args[i] = CompileExpr(call.Arguments[i], namesAndValues, prefix, name, isLeft);
                 }
 
-                // CHANGE ID = 1 -> comentado ABAIXO pois no momento da definição precisava concatenar com os caracteres "%" no início e no final quando usado like com apenas um parametro
+                // CHANGE ID = 1 -> comentado ABAIXO pois no momento da definição precisava concatenar com os caracteres "%" no início e/ou no final 
+                //                  quando usado like com apenas um parametro
                 //                  validar em outras situações
-                //                  queryNames.RemoveAt(queryNames.Count - 1);
 
                 var sqlCall = "";
                 var _parName = "";
@@ -241,8 +234,6 @@ namespace Rednet.DataAccess
             {
                 var _c = (ConstantExpression)expr;
 
-                //if (!isLeft) namesAndValues[name].Add(_c.Value);
-                //queryValues.Add(_c.Value);
                 return new CompileResult
                 {
                     CommandText = "?",
@@ -253,23 +244,13 @@ namespace Rednet.DataAccess
             {
                 var u = (UnaryExpression)expr;
                 var ty = u.Type;
-                var valr = CompileExpr(u.Operand, /*queryNames, queryValues,*/namesAndValues, prefix, name, isLeft);
+                var valr = CompileExpr(u.Operand, namesAndValues, prefix, name, isLeft);
                 return new CompileResult
                 {
                     CommandText = valr.CommandText,
                     Value = valr.Value != null ? ConvertTo(valr.Value, ty) : null
                 };
             }
-            //else if (expr is ParameterExpression)
-            //{
-            //    var _mem = (ParameterExpression)expr;
-            //    var _a = _mem;
-            //}
-            //else if (expr.NodeType == ExpressionType.Parameter)
-            //{
-            //    var r = CompileExpr((expr as ParameterExpression), queryNames, queryValues, isLeft);
-            //    return new CompileResult { CommandText = r.ParameterName };
-            //}
             else if (expr.NodeType == ExpressionType.MemberAccess)
             {
 
@@ -279,7 +260,7 @@ namespace Rednet.DataAccess
 
                 if (_mem.Expression != null && _mem.Expression.NodeType == ExpressionType.MemberAccess && !_joinAtt.Any())
                 {
-                    _rr = CompileExpr(_mem.Expression, /*queryNames, queryValues,*/namesAndValues, prefix, name, isLeft);
+                    _rr = CompileExpr(_mem.Expression, namesAndValues, prefix, name, isLeft);
                 }
 
                 if (_mem.Expression != null && _mem.Expression.NodeType == ExpressionType.Parameter)
@@ -291,38 +272,25 @@ namespace Rednet.DataAccess
 
                     if (_joinAtt.Any())
                     {
-                        //if (_mem.Expression is ParameterExpression)
-                        //{
-                        //    var r = CompileExpr(_mem.Expression, queryNames, queryValues, isLeft);
-                        //}
                         var _c = (isLeft ? _mem.Type.Name + "." : "");// + ((PropertyInfo)_mem.Member).Name;
                         return new CompileResult { CommandText = _c, Value = "" };
                     }
 
-                    var _columnName = (isLeft ? string.Format("{0}.", name) : "") + _mem.Member.Name;
-                    //var _key = _columnName.Replace(".", "");
-                    //var _parameter = GetNewParameter(_key);
+                    //var _columnName = (isLeft ? string.Format("{0}.", name) : "") + _mem.Member.Name;
+                    var _columnName = $"{name}.{_mem.Member.Name}";
 
-                    //namesAndValues.Add(_parameter, new List<object>());
                     return new CompileResult { CommandText = _columnName };
-                    //queryNames.Add(_columnName.Replace(".", ""));
-                    //return new CompileResult { CommandText = _columnName };
                 }
                 else
                 {
                     object obj = null;
                     if (_mem.Expression != null)
                     {
-                        var r = CompileExpr(_mem.Expression, /*queryNames, queryValues,*/namesAndValues, prefix, name, isLeft);
+                        var r = CompileExpr(_mem.Expression, namesAndValues, prefix, name, isLeft);
                         if (r.Value == null)
                         {
                             throw new NotSupportedException("Member access failed to compile expression");
                         }
-                        //if (r.CommandText == "?")
-                        //{
-                        //    //if (!isLeft) namesAndValues[name].RemoveAt(namesAndValues[name].Count - 1);
-                        //    //queryValues.RemoveAt(queryValues.Count - 1);
-                        //}
                         obj = r.Value;
                     }
 
@@ -339,10 +307,6 @@ namespace Rednet.DataAccess
                             if (_rr.CommandText.Equals("?"))
                             {
                                 _rr.Value = _pp.GetValue(obj);
-                                //_rr.CommandText += _pp.Name;
-                                //_rr.Value = Activator.CreateInstance(_pp.PropertyType);
-                                //namesAndValues.Add(_rr.CommandText.Replace(".", ""), new List<object>());
-                                //queryNames.Add(_rr.CommandText.Replace(".", ""));
                             }
                         }
                         else
@@ -375,10 +339,9 @@ namespace Rednet.DataAccess
                             _count++;
                             var _parameter = string.Format("{0}{1}{2}", name, _mem.Member.Name, _count);
                             namesAndValues.Add(_parameter, a);
-                            //queryValues.Add(a);
-                            //queryNames.Add(string.Format("{0}{1}{2}", name, _mem.Member.Name, _count));
+
                             sb.Append(head);
-                            //sb.Append("?");
+
                             sb.AppendFormat("{0}{1}{2}{3}", prefix, name, _mem.Member.Name, _count);
                             head = ",";
                         }
@@ -386,7 +349,6 @@ namespace Rednet.DataAccess
                         return new CompileResult
                         {
                             CommandText = sb.ToString(),
-                            //CommandText = string.Format("{0}{1}{2}", prefix, name, _mem.Member.Name),
                             Value = val
                         };
                     }
@@ -395,8 +357,6 @@ namespace Rednet.DataAccess
 
                         if (_rr != null) return _rr;
 
-                        //namesAndValues[name].Add(val);
-                        //queryValues.Add(val);
                         return new CompileResult
                         {
                             CommandText = "?",
@@ -407,7 +367,5 @@ namespace Rednet.DataAccess
             }
             throw new NotSupportedException("Cannot compile: " + expr.NodeType.ToString());
         }
-
     }
-
 }

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
     <metadata>
         <id>Rednet.DataAccess</id>
-        <version>1.0.14</version>
+        <version>1.0.15</version>
         <title>Rednet DataAccess</title>
         <authors>Rednet Software</authors>
         <owners>Nelson Santos</owners>
@@ -12,9 +12,7 @@
         <developmentDependency>true</developmentDependency>
         <description>Rednet.DataAccess is yet another component to work with data that simplifies your use.</description>
         <releaseNotes>
-          Created RaiseErrorOnValidateData method that call ErrorOnValidateData event and permits that inheriters call them too
-          Fix OnValidateData function to call RaiseErrorOnValidateData method.
-          Set SetValidateDataFunction to public for inheriters can create your own OnValidateData Function
+          Created a new data-to-object engine that run 2x faster than previous versions
         </releaseNotes>
         <dependencies>
             <group targetFramework="portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10">
@@ -36,17 +34,17 @@
     </metadata>
    <files>
       <!--Core-->
-     <file src="Rednet.DataAccess\bin\Rednet.DataAccess.dll" target="lib\portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Rednet.DataAccess.dll" />
-     <file src="Rednet.DataAccess\bin\Rednet.Shared.dll" target="lib\portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Rednet.Shared.dll" />
+     <file src="Rednet.DataAccess\bin\Rednet.DataAccess.dll" target="lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Rednet.DataAccess.dll" />
+     <file src="Rednet.DataAccess\bin\Rednet.Shared.dll" target="lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10\Rednet.Shared.dll" />
      
      <!--Xamarin.Android-->
      <file src="Rednet.DataAccess.Droid\bin\Rednet.DataAccess.dll" target="lib\MonoAndroid10\Rednet.DataAccess.dll" />
      <file src="Rednet.DataAccess.Droid\bin\Rednet.Shared.dll" target="lib\MonoAndroid10\Rednet.Shared.dll" />
 
      <!--Xamarin.WP81-->
-     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Rednet.DataAccess.dll" target="lib\wp81\Rednet.DataAccess.dll" />
-     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Rednet.Shared.dll" target="lib\wp81\Rednet.Shared.dll" />
-     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Community.CsharpSqlite.SqlLiteClient.dll" target="lib\wp81\Community.CsharpSqlite.SqlLiteClient.dll" />
+     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Rednet.DataAccess.dll" target="lib\wpa81\Rednet.DataAccess.dll" />
+     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Rednet.Shared.dll" target="lib\wpa81\Rednet.Shared.dll" />
+     <file src="Rednet.DataAccess.WP8\bin\x86\Debug\Community.CsharpSqlite.SqlLiteClient.dll" target="lib\wpa81\Community.CsharpSqlite.SqlLiteClient.dll" />
      
      <!--NET45-->
      <file src="Rednet.DataAccess.NET45\bin\Rednet.DataAccess.dll" target="lib\net45\Rednet.DataAccess.dll" />

@@ -63,6 +63,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Rednet.DataAccess\BaseFieldDef.cs">
+      <Link>BaseFieldDef.cs</Link>
+    </Compile>
     <Compile Include="..\Rednet.DataAccess\CompileResult.cs">
       <Link>CompileResult.cs</Link>
     </Compile>
@@ -89,6 +92,12 @@
     </Compile>
     <Compile Include="..\Rednet.DataAccess\DataFunctionsSqlServer.cs">
       <Link>DataFunctionsSqlServer.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\DataPopulatorHelper.cs">
+      <Link>DataPopulatorHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\Enums.cs">
+      <Link>Enums.cs</Link>
     </Compile>
     <Compile Include="..\Rednet.DataAccess\ErrorOnSaveEventArgs.cs">
       <Link>ErrorOnSaveEventArgs.cs</Link>
@@ -120,8 +129,8 @@
     <Compile Include="..\Rednet.DataAccess\IDatabaseObject.cs">
       <Link>IDatabaseObject.cs</Link>
     </Compile>
-    <Compile Include="..\Rednet.DataAccess\IFieldDefinition.cs">
-      <Link>IFieldDefinition.cs</Link>
+    <Compile Include="..\Rednet.DataAccess\JoinFieldAttribute.cs">
+      <Link>JoinFieldAttribute.cs</Link>
     </Compile>
     <Compile Include="..\Rednet.DataAccess\NotifyRecordChangesEventArgs.cs">
       <Link>NotifyRecordChangesEventArgs.cs</Link>
@@ -140,6 +149,9 @@
     </Compile>
     <Compile Include="..\Rednet.DataAccess\TableDefinition.cs">
       <Link>TableDefinition.cs</Link>
+    </Compile>
+    <Compile Include="..\Rednet.DataAccess\TransactionObject.cs">
+      <Link>TransactionObject.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>

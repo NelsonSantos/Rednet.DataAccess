@@ -42,16 +42,18 @@
     <AssemblyOriginatorKeyFile>Rednet.DataAccess.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BaseFieldDef.cs" />
     <Compile Include="CompileResult.cs" />
     <Compile Include="Dapper\SqlMapper.cs" />
     <Compile Include="DatabaseObject.cs" />
-    <Compile Include="DatabaseObjectImplementation.cs" />
+    <Compile Include="DataPopulatorHelper.cs" />
     <Compile Include="DatabaseObjectShared.cs" />
     <Compile Include="DataFunctions.cs" />
     <Compile Include="DataFunctionsMySql.cs" />
     <Compile Include="DataFunctionsOracle.cs" />
     <Compile Include="DataFunctionsSQLite.cs" />
     <Compile Include="DataFunctionsSqlServer.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="ErrorOnSaveEventArgs.cs" />
     <Compile Include="ErrorOnValidateEventArgs.cs" />
     <Compile Include="FastMember\CallSiteCache.cs" />
@@ -62,7 +64,8 @@
     <Compile Include="FieldDefAttribute.cs" />
     <Compile Include="FieldRule.cs" />
     <Compile Include="IDatabaseObject.cs" />
-    <Compile Include="IFieldDefinition.cs" />
+    <Compile Include="TransactionObject.cs" />
+    <Compile Include="JoinFieldAttribute.cs" />
     <Compile Include="NotifyRecordChangesEventArgs.cs" />
     <Compile Include="ObjectDefAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

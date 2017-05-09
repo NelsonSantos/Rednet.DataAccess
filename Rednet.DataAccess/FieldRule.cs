@@ -2,25 +2,11 @@ using System;
 
 namespace Rednet.DataAccess
 {
-    public enum FieldCheck
-    {
-        None,
-        Equal,
-        NotEqual,
-        Range,
-        LessThan,
-        GreaterThan,
-        Null,
-        NotNull,
-        NullOrEmpty
-    }
-
     public class FieldRuleAttribute : Attribute
     {
         internal string Name { get; set; }
         public string ValidationText { get; set; }
         internal bool IsForValidate { get; set; }
-        //public bool IsOk { get; internal set; }
         public FieldCheck CheckType { get; set; }
         internal Type Type { get; set; }
         public object FirstValueToCheck { get; set; }
@@ -101,7 +87,6 @@ namespace Rednet.DataAccess
 
             }
 
-            //this.IsOk = _isOk;
             return _isOk;
 
         }

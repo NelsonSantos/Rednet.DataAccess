@@ -22,52 +22,62 @@ namespace Rednet.Test.Console
 
             Imovel.Truncate();
             Visitante.Truncate();
-            //Entrada.Truncate();
+            Entrada.Truncate();
 
-            for (int i = 0; i < 20; i++)
+            using (var _trans = new TransactionObject(false))
             {
-                var _imovel = new Imovel {EnderecoImovel = $"Rua {i}, nº10", Proprietario = $"Proprietário {i}"};
-                _imovel.SaveChanges();
-            }
-            for (int i = 0; i < 20; i++)
-            {
-                var _id = i.ZeroEsquerda(2);
-                var _visitante = new Visitante { Nome = $"Nome {_id}" };
-                _visitante.SaveChanges();
-            }
-
-            var _action = new Action(() =>
-            {
-                var _rnd = new Random(1);
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < 20; i++)
                 {
-                    var _yes = _rnd.Next(1, 2) == 1;
-                    var _entrada = new Entrada
-                    {
-                        Autorizador = "Teste",
-                        DataHoraEntrada = DateTime.Now,
-                        DataHoraSaida = _yes ? DateTime.Now : default(DateTime),
-                        IdImovel = _rnd.Next(1, 20),
-                        IdVisitante = _rnd.Next(1, 20),
-                        MotivoVisita = MotivoVisita.Pessoal,
-                        StatusEntrada = _yes ? StatusEntrada.Finalizado : StatusEntrada.Entrada
-                    };
-                    try
-                    {
-                        _entrada.SaveChanges();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Console.WriteLine(ex.Message);
-                    }
-                    Thread.Sleep(10);
+                    var _imovel = new Imovel {EnderecoImovel = $"Rua {i}, nº10", Proprietario = $"Proprietário {i}"};
+                    _imovel.SaveChanges(transaction: _trans);
                 }
-            });
+                for (int i = 0; i < 20; i++)
+                {
+                    var _id = i.ZeroEsquerda(2);
+                    var _visitante = new Visitante {Nome = $"Nome {_id}"};
+                    _visitante.SaveChanges(transaction: _trans);
+                }
 
-            for (int _a = 0; _a < 10; _a++)
-            {
-                //_action.Invoke();
-                Thread.Sleep(500);
+                var _action = new Action(() =>
+                {
+                    var _rnd = new Random(1);
+                    for (int i = 0; i < 100; i++)
+                    {
+                        var _yes = _rnd.Next(1, 2) == 1;
+                        var _entrada = new Entrada
+                        {
+                            Autorizador = "Teste",
+                            DataHoraEntrada = DateTime.Now,
+                            DataHoraSaida = _yes ? DateTime.Now : default(DateTime),
+                            IdImovel = _rnd.Next(1, 20),
+                            IdVisitante = _rnd.Next(1, 20),
+                            MotivoVisita = MotivoVisita.Pessoal,
+                            StatusEntrada = _yes ? StatusEntrada.Finalizado : StatusEntrada.Entrada
+                        };
+                        try
+                        {
+                            _entrada.SaveChanges(transaction: _trans);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Console.WriteLine(ex.Message);
+                        }
+                        Thread.Sleep(10);
+                    }
+                });
+
+                var _watch = new Stopwatch();
+                _watch.Start();
+
+                for (int _a = 0; _a < 10; _a++)
+                {
+                    _action.Invoke();
+                    Thread.Sleep(500);
+                }
+                _watch.Stop();
+
+                System.Console.WriteLine($"Tempo do insert sem transação: {_watch.Elapsed.ToString("g")}");
+                _trans.Commit();
             }
 
             var _date1 = DateTime.Now.Date;
@@ -94,7 +104,8 @@ namespace Rednet.Test.Console
             var _ret = DatabaseObject<T>.Query(predicate);
             _watch.Stop();
 
-            System.Console.WriteLine($"Tempo da consulta: {_watch.Elapsed.ToString("g")}");
+            System.Console.WriteLine($"Tempo da consulta....: {_watch.Elapsed.ToString("g")}");
+            System.Console.WriteLine($"Total de registro(s).: {_ret.Count()}");
             //var _trace = Entrada.GetStatementTrace(e => _status.Contains(e.StatusEntrada) && e.DataHoraEntrada >= _date1 && e.DataHoraEntrada <= _date2);
 
             //System.Console.WriteLine($"SQL:\r\n{_trace}");
