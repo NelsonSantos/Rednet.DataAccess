@@ -710,12 +710,32 @@ namespace Rednet.DataAccess
                         // tenta jogar o valor nulo, se recusar significa que é um campo requerido então o registro está nulo
                         try
                         {
-                            var _func = new Func<object, object>((value) =>
+                            Func<object, object> _func;
+
+                            if (Nullable.GetUnderlyingType(_member.Type) != null)
                             {
-                                return value;
-                            });
+                                _func = new Func<object, object>((value) =>
+                                {
+                                    var _funcRet = value == null ? null : Convert.ChangeType(value, Nullable.GetUnderlyingType(_member.Type));
+                                    return _funcRet;
+                                });
+                            }
+                            else
+                            {
+                                _func = new Func<object, object>((value) =>
+                                {
+                                    return value;
+                                });
+                            }
+
                             _acessor[_object, _member.Name] = _func.Invoke(_value);
                             m_PopulateFuncs.Add(_funcName, _func);
+                            //var _func = new Func<object, object>((value) =>
+                            //{
+                            //    return value;
+                            //});
+                            //_acessor[_object, _member.Name] = _func.Invoke(_value);
+                            //m_PopulateFuncs.Add(_funcName, _func);
                         }
                         catch (NullReferenceException nrex)
                         {

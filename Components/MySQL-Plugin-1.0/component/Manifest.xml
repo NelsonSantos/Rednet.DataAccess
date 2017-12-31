@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<component format="1" id="MySQL-Plugin">
+  <name>MySQL Plugin</name>
+  <publisher>SnowWolf725</publisher>
+  <publisher-url>http://blog.snowwolf725.me</publisher-url>
+  <version>1.0</version>
+  <summary>The plugin allows Xamarin app to connect remote MariaDB/MySQL.</summary>
+  <screenshots>
+    <img src="screenshots/screenshot1.jpg" title="screenshot1" />
+    <img src="screenshots/screenshot2.png" title="screenshot2" />
+    <img src="screenshots/screenshot3.png" title="screenshot3" />
+  </screenshots>
+  <samples>
+    <sample id="SampleForMySQL">
+      <name>Android Sample</name>
+      <summary>Android Sample</summary>
+    </sample>
+    <sample id="SampleForMySQL">
+      <name>iOS Sample</name>
+      <summary>iOS Sample</summary>
+    </sample>
+  </samples>
+</component>

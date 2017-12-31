@@ -27,13 +27,13 @@ namespace Rednet.Shared
 {
     public static class ImageResizer
     {
-        public static byte[] ResizeImage(byte[] imageData, float width, float height)
+        public static byte[] ResizeImage(byte[] imageData, float width, float height, int quality)
         {
 #if __IOS__
             return ResizeImageIOS(imageData, width, height);
 #endif
 #if DROID
-            return ResizeImageAndroid(imageData, width, height);
+            return ResizeImageAndroid(imageData, width, height, quality);
 #endif
 #if WINDOWS_PHONE
             return ResizeImageWinPhone(imageData, width, height);
@@ -106,7 +106,7 @@ namespace Rednet.Shared
         //
 
 #if DROID
-        public static byte[] ResizeImageAndroid(byte[] imageData, float width, float height)
+        public static byte[] ResizeImageAndroid(byte[] imageData, float width, float height, int quality)
         {
             // Load the bitmap 
             Bitmap originalImage = BitmapFactory.DecodeByteArray(imageData, 0, imageData.Length);
@@ -134,7 +134,7 @@ namespace Rednet.Shared
             // 
             using (MemoryStream ms = new MemoryStream())
             {
-                resizedImage.Compress(Bitmap.CompressFormat.Jpeg, 100, ms);
+                resizedImage.Compress(Bitmap.CompressFormat.Jpeg, quality, ms);
                 return ms.ToArray();
             }
         }

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 #if !PCL
 using System.Data;
-using System.Data.OracleClient;
 using MySql.Data.MySqlClient;
 #endif
 using System.Linq;

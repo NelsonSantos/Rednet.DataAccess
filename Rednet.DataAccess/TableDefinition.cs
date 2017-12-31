@@ -42,19 +42,22 @@ namespace Rednet.DataAccess
 
             var _nameKey = string.Format("{0}{1}", (baseName.IsNullOrEmpty() ? "" : baseName + "_"), type.Name);
 
-            if (!TableDefinitions.ContainsKey(_nameKey))
+            lock (TableDefinitions)
             {
-                var _nameAlias = string.Format("{0}_{1}", _nameKey, GetNext());
-                var _new = new TableDefinition
+                if (!TableDefinitions.ContainsKey(_nameKey))
                 {
-                    BaseType = type, 
-                    BaseName = baseName, 
-                    TableName = type.Name, 
-                    TableNameAlias = _nameAlias,
-                };
-                _new.InitFields();
+                    var _nameAlias = string.Format("{0}_{1}", _nameKey, GetNext());
+                    var _new = new TableDefinition
+                    {
+                        BaseType = type,
+                        BaseName = baseName,
+                        TableName = type.Name,
+                        TableNameAlias = _nameAlias,
+                    };
+                    _new.InitFields();
 
-                TableDefinitions.Add(_nameKey, _new);
+                    TableDefinitions.Add(_nameKey, _new);
+                }
             }
 
             return TableDefinitions[_nameKey];
@@ -131,6 +134,7 @@ namespace Rednet.DataAccess
             this.Fields = new Dictionary<string, FieldDefAttribute>();
             this.Rules = new Dictionary<string, FieldRuleAttribute>();
             this.JoinFields = new Dictionary<string, JoinFieldAttribute>();
+
 #if WINDOWS_PHONE_APP
             var _srcProp = m_Type.GetRuntimeProperties();
 #else
@@ -188,7 +192,7 @@ namespace Rednet.DataAccess
                         _joinAtt.PrimaryKeysFields = _fields.ToArray();
 
                         this.JoinFields.Add(_p.Name, _joinAtt);
-                        this.JoinTables.Add(_joinAtt.Name, TableDefinition.GetTableDefinition(_joinAtt.FieldType, this.TableName));
+                        this.JoinTables.Add(_joinAtt.Name, TableDefinition.GetTableDefinition(_joinAtt.FieldType, $"{this.TableName}_{_p.Name}"));
                     }
                     else
                     {
@@ -230,7 +234,9 @@ namespace Rednet.DataAccess
                         var _ruleAtt = (FieldRuleAttribute)_p.GetCustomAttributes(typeof(FieldRuleAttribute), true).FirstOrDefault();
 
                         if (_ruleAtt == null)
+                        {
                             this.Rules.Add(_p.Name, new FieldRuleAttribute {Name = _p.Name, Type = _p.PropertyType, ValidationText = "", IsForValidate = false});
+                        }
                         else
                         {
                             _ruleAtt.Name = _p.Name;
@@ -609,10 +615,22 @@ namespace Rednet.DataAccess
             var _ret = new StringBuilder();
             foreach (var _joinField in baseTable.JoinFields.Select(b=>b.Value))
             {
+                // criando as colunas comuns do Join
                 var _joinRelation = "";
                 for (var _i = 0; _i < _joinField.SourceColumnNames.Length; _i++)
                 {
                     _joinRelation += (_joinRelation == "" ? "" : " and ") + string.Format("{0}.{1} = {2}.{3}", baseTable.TableNameAlias, _joinField.SourceColumnNames[_i], joinTables[_joinField.Name].TableNameAlias, _joinField.TargetColumnNames[_i]);
+                }
+
+                // aplicando os filtros do Join
+                for (var _i = 0; _i < _joinField.FilterColumnNames.Length; _i++)
+                {
+                    var _parameterName = $"{joinTables[_joinField.Name].TableNameAlias}_{_joinField.FilterColumnNames[_i]}";
+                    var _parameterValue = _joinField.FilterColumnValues[_i];
+
+                    _joinRelation += (_joinRelation == "" ? "" : " and ") + string.Format("{0}.{1} = @{2}", joinTables[_joinField.Name].TableNameAlias, _joinField.FilterColumnNames[_i], _parameterName);
+
+                    _joinField.AddFilterParameter(_parameterName, _parameterValue);
                 }
 
                 var _join = "";

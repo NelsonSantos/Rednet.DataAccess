@@ -24,6 +24,8 @@ namespace Rednet.Test.Console.Objects
         [FieldDef(Label = "Data do Cadastro", EditOnForm = false)]
         public DateTime DatCadastro { get; set; } = DateTime.Now;
 
+        public TipoVisitante TipoVisitante { get; set; }
+
         [FieldDef(IgnoreForSave = true, DisplayOnForm = false)]
         public string SearchField
         {
@@ -78,5 +80,11 @@ namespace Rednet.Test.Console.Objects
 
             return false;
         }
+    }
+
+    public enum TipoVisitante
+    {
+        Pessoal,
+        Servicos
     }
 }

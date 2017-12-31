@@ -64,7 +64,12 @@ namespace Rednet.Test.Console.Objects
         //    get { return $"{this.Nome} {this.Autorizador} {this.Imovel.EnderecoImovel} {this.Cpf} {this.DataHoraEntrada.ToStringBrasil()} {this.DataHoraSaida.ToValue().ToStringBrasil()}"; }
         //}
 
-        [JoinField(JoinRelation = JoinRelation.OneToOne, JoinType = JoinType.LeftJoin, SourceColumnNames = new[] { "IdVisitante" }, TargetColumnNames = new[] { "IdVisitante" })]
+        [JoinField(JoinRelation = JoinRelation.OneToOne, 
+            JoinType = JoinType.LeftJoin, 
+            SourceColumnNames = new[] { "IdVisitante" }, 
+            TargetColumnNames = new[] { "IdVisitante" }, 
+            FilterColumnNames = new[] { "TipoVisitante" }, 
+            FilterColumnValues = new object[] { TipoVisitante.Pessoal })]
         public Visitante Visitante { get; set; }
 
     }
