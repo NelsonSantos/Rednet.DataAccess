@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
     <metadata>
         <id>Rednet.DataAccess</id>
-        <version>1.0.15</version>
+        <version>1.0.16</version>
         <title>Rednet DataAccess</title>
         <authors>Rednet Software</authors>
         <owners>Nelson Santos</owners>
@@ -12,7 +12,7 @@
         <developmentDependency>true</developmentDependency>
         <description>Rednet.DataAccess is yet another component to work with data that simplifies your use.</description>
         <releaseNotes>
-          Created a new data-to-object engine that run 2x faster than previous versions
+          Added FiltersColumnNames and FilterColumnValues as parameters for JoinFieldAttribute
         </releaseNotes>
         <dependencies>
             <group targetFramework="portable-net45+wp81+MonoAndroid10+MonoTouch10+Xamarin.iOS10">
