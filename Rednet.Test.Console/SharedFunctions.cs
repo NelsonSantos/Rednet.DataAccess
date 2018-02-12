@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -80,9 +80,9 @@ namespace Rednet.Test.Console
             return _file;
         }
 
-        public static SQLiteConnection GetConnection()
+        public static SqliteConnection GetConnection()
         {
-            return new SQLiteConnection(GetDatabaseFile());
+            return new SqliteConnection(GetDatabaseFile());
         }
 
         public static void ShowWarningMessage(string message)

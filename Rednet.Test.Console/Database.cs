@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -59,11 +59,6 @@ namespace Rednet.Test.Console
             try
             {
                 var _file = SharedFunctions.GetDatabaseFile();
-
-                if (!File.Exists(_file))
-                {
-                    SQLiteConnection.CreateFile(_file);
-                }
 
                 var _ret = new DataFunctionsSQLite() { DatabaseFile = _file, Name = databaseName };
 
